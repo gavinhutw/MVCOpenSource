@@ -1,0 +1,77 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace EnterprisePortal.Models
+{
+    public class LeaveApplication
+    {
+        [Key]
+        public int Id { get; set; }
+
+        [Required]
+        [StringLength(20)]
+        public string ApplicantId { get; set; } = string.Empty;
+
+        [Required]
+        [Display(Name = "請假類別")]
+        public LeaveType LeaveType { get; set; }
+
+        [Required]
+        [Display(Name = "請假起始日期")]
+        public DateTime StartDate { get; set; }
+
+        [Required]
+        [Display(Name = "請假結束日期")]
+        public DateTime EndDate { get; set; }
+
+        [Required]
+        [StringLength(500)]
+        [Display(Name = "請假原因")]
+        public string Reason { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(20)]
+        [Display(Name = "代理人")]
+        public string ProxyId { get; set; } = string.Empty;
+
+        [StringLength(300)]
+        [Display(Name = "附件")]
+        public string? AttachmentPath { get; set; }
+
+        [Display(Name = "申請狀態")]
+        public ApplicationStatus Status { get; set; } = ApplicationStatus.Pending;
+
+        [Display(Name = "申請時間")]
+        public DateTime AppliedAt { get; set; } = DateTime.Now;
+
+        [StringLength(500)]
+        [Display(Name = "備註")]
+        public string? Remarks { get; set; }
+
+        [ForeignKey("ApplicantId")]
+        public virtual Employee? Applicant { get; set; }
+
+        [ForeignKey("ProxyId")]
+        public virtual Employee? Proxy { get; set; }
+
+        public virtual ICollection<LeaveApprover> Approvers { get; set; } = new List<LeaveApprover>();
+    }
+
+    public enum LeaveType
+    {
+        [Display(Name = "特別休假")] AnnualLeave = 1,
+        [Display(Name = "事假")] PersonalLeave = 2,
+        [Display(Name = "病假")] SickLeave = 3,
+        [Display(Name = "公假")] OfficialLeave = 4,
+        [Display(Name = "喪假")] BereavementLeave = 5
+    }
+
+    public enum ApplicationStatus
+    {
+        [Display(Name = "待審核")] Pending = 1,
+        [Display(Name = "簽核中")] InProgress = 2,
+        [Display(Name = "已通過")] Approved = 3,
+        [Display(Name = "已拒絕")] Rejected = 4,
+        [Display(Name = "已撤回")] Withdrawn = 5
+    }
+}

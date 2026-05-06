@@ -1,0 +1,146 @@
+@model IEnumerable<EnterprisePortal.Models.LeaveApplication>
+@using EnterprisePortal.Models
+@{
+    ViewData["Title"] = "請假統計報表";
+    var byType = ViewBag.ByType as dynamic;
+    var byDept = ViewBag.ByDept as dynamic;
+    var byMonth = ViewBag.ByMonth as dynamic;
+}
+
+<div class="content-card">
+    <h4><i class="bi bi-calendar-x me-2"></i>請假統計報表</h4>
+
+    <form asp-action="LeaveReport" method="get" class="row g-2 mb-4">
+        <div class="col-md-2">
+            <select name="year" class="form-select form-select-sm" asp-items="@ViewBag.YearList">
+                <option value="">-- 年度 --</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select name="month" class="form-select form-select-sm">
+                <option value="">-- 全年 --</option>
+                @for (int m = 1; m <= 12; m++)
+                {
+                    if (ViewBag.Month?.ToString() == m.ToString()) { <option value="@m" selected>@m 月</option> }
+                    else { <option value="@m">@m 月</option> }
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select name="deptId" class="form-select form-select-sm" asp-items="@ViewBag.DepartmentList">
+                <option value="">-- 全部部門 --</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select name="leaveType" class="form-select form-select-sm">
+                <option value="">-- 全部假別 --</option>
+                @foreach (LeaveType lt in Enum.GetValues(typeof(LeaveType)))
+                {
+                    if (ViewBag.SelectedType?.ToString() == ((int)lt).ToString()) { <option value="@((int)lt)" selected>@lt.GetDisplayName()</option> }
+                    else { <option value="@((int)lt)">@lt.GetDisplayName()</option> }
+                }
+            </select>
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-search me-1"></i>查詢</button>
+        </div>
+    </form>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card text-center p-3 border-primary">
+                <div class="text-muted small">請假總件數</div>
+                <div class="display-6 fw-bold text-primary">@ViewBag.TotalLeaves</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center p-3 border-success">
+                <div class="text-muted small">請假總天數</div>
+                <div class="display-6 fw-bold text-success">@ViewBag.TotalDays</div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <canvas id="leaveTypeChart" height="80"></canvas>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <h6 class="fw-bold">依假別統計</h6>
+            <table class="table table-sm table-bordered">
+                <thead><tr><th>假別</th><th>件數</th><th>天數</th></tr></thead>
+                <tbody>
+                    @if (byType != null) {
+                        foreach (var row in (dynamic)byType) {
+                            <tr><td>@row.Type</td><td>@row.Count</td><td>@row.Days</td></tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="col-md-6">
+            <h6 class="fw-bold">依部門統計</h6>
+            <table class="table table-sm table-bordered">
+                <thead><tr><th>部門</th><th>件數</th></tr></thead>
+                <tbody>
+                    @if (byDept != null) {
+                        foreach (var row in (dynamic)byDept) {
+                            <tr><td>@row.Dept</td><td>@row.Count</td></tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <h6 class="fw-bold mb-2">明細列表</h6>
+    <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle small">
+            <thead>
+                <tr>
+                    <th>申請人</th><th>部門</th><th>假別</th>
+                    <th>起始日</th><th>結束日</th><th>天數</th><th>狀態</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var l in Model)
+                {
+                    <tr>
+                        <td>@l.Applicant?.FullName (@l.ApplicantId)</td>
+                        <td>@l.Applicant?.Department?.DepartmentName</td>
+                        <td><span class="badge bg-primary">@l.LeaveType.GetDisplayName()</span></td>
+                        <td>@l.StartDate.ToString("yyyy/MM/dd")</td>
+                        <td>@l.EndDate.ToString("yyyy/MM/dd")</td>
+                        <td>@((l.EndDate - l.StartDate).Days + 1)</td>
+                        <td><span class="badge bg-success">已通過</span></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    @{
+        var tLabels = new List<string>();
+        var tData = new List<int>();
+        if (byType != null) {
+            foreach (var row in (dynamic)byType) {
+                tLabels.Add((string)row.Type);
+                tData.Add((int)row.Count);
+            }
+        }
+    }
+    new Chart(document.getElementById('leaveTypeChart'), {
+        type: 'bar',
+        data: {
+            labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(tLabels)),
+            datasets: [{ label: '件數', data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(tData)),
+                backgroundColor: ['#2560a0','#7c3aed','#10b981','#f59e0b','#ef4444'], borderRadius: 4 }]
+        },
+        options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+    });
+</script>
+}

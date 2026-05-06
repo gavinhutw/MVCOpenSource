@@ -1,0 +1,91 @@
+@model EnterprisePortal.ViewModels.OvertimeQueryViewModel
+@using EnterprisePortal.Models
+@{
+    ViewData["Title"] = "加班記錄查詢";
+}
+
+<div class="content-card">
+    <h4><i class="bi bi-search me-2"></i>加班記錄查詢</h4>
+
+    <form asp-action="Query" method="get" class="row g-2 mb-4">
+        <div class="col-md-3">
+            <label class="form-label">申請狀態</label>
+            <select name="Status" class="form-select form-select-sm">
+                <option value="">-- 全部 --</option>
+                @foreach (ApplicationStatus s in Enum.GetValues(typeof(ApplicationStatus)))
+                {
+                    if (Model.Status == s)
+                    {
+                        <option value="@((int)s)" selected>@s.GetDisplayName()</option>
+                    }
+                    else
+                    {
+                        <option value="@((int)s)">@s.GetDisplayName()</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">起始日期</label>
+            <input type="date" name="StartDate" class="form-control form-control-sm"
+                   value="@Model.StartDate?.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">結束日期</label>
+            <input type="date" name="EndDate" class="form-control form-control-sm"
+                   value="@Model.EndDate?.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary btn-sm w-100">
+                <i class="bi bi-search me-1"></i>查詢
+            </button>
+        </div>
+    </form>
+
+    @if (!Model.Results.Any())
+    {
+        <div class="alert alert-info"><i class="bi bi-info-circle me-1"></i>查無符合的加班記錄。</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered align-middle">
+                <thead>
+                    <tr>
+                        <th>申請日期</th>
+                        <th>加班起始</th>
+                        <th>加班結束</th>
+                        <th>加班原因</th>
+                        <th>簽核狀態</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Results)
+                    {
+                        var badgeClass = item.Status switch {
+                            ApplicationStatus.Pending => "badge-pending",
+                            ApplicationStatus.InProgress => "badge-inprogress",
+                            ApplicationStatus.Approved => "badge-approved",
+                            ApplicationStatus.Rejected => "badge-rejected",
+                            _ => "badge-withdrawn"
+                        };
+                        <tr>
+                            <td>@item.AppliedAt.ToString("yyyy/MM/dd")</td>
+                            <td>@item.StartDate.ToString("yyyy/MM/dd")</td>
+                            <td>@item.EndDate.ToString("yyyy/MM/dd")</td>
+                            <td class="text-truncate" style="max-width:200px;" title="@item.Reason">@item.Reason</td>
+                            <td><span class="badge @badgeClass">@item.Status.GetDisplayName()</span></td>
+                            <td>
+                                <a asp-action="Detail" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye me-1"></i>詳情
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="text-muted small">共 @Model.Results.Count 筆記錄</div>
+    }
+</div>

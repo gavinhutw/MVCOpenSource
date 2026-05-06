@@ -1,0 +1,49 @@
+@{
+    ViewData["Title"] = "首頁";
+}
+
+<div class="content-card">
+    <h4><i class="bi bi-house-fill me-2"></i>歡迎使用企業入口網站</h4>
+    <div class="row g-3 mt-2">
+        <div class="col-md-3">
+            <a asp-controller="Leave" asp-action="Apply" class="text-decoration-none">
+                <div class="card text-white h-100" style="background: linear-gradient(135deg,#1a3a5c,#2560a0);">
+                    <div class="card-body text-center py-4">
+                        <i class="bi bi-calendar-x" style="font-size:2.5rem;"></i>
+                        <div class="mt-2 fw-bold">請假申請</div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a asp-controller="Overtime" asp-action="Apply" class="text-decoration-none">
+                <div class="card text-white h-100" style="background: linear-gradient(135deg,#7c3aed,#a855f7);">
+                    <div class="card-body text-center py-4">
+                        <i class="bi bi-clock-history" style="font-size:2.5rem;"></i>
+                        <div class="mt-2 fw-bold">加班申請</div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a asp-controller="Attendance" asp-action="Index" class="text-decoration-none">
+                <div class="card text-white h-100" style="background: linear-gradient(135deg,#0f766e,#14b8a6);">
+                    <div class="card-body text-center py-4">
+                        <i class="bi bi-fingerprint" style="font-size:2.5rem;"></i>
+                        <div class="mt-2 fw-bold">上下班刷卡</div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a asp-controller="Employee" asp-action="Index" class="text-decoration-none">
+                <div class="card text-white h-100" style="background: linear-gradient(135deg,#b45309,#f59e0b);">
+                    <div class="card-body text-center py-4">
+                        <i class="bi bi-person-gear" style="font-size:2.5rem;"></i>
+                        <div class="mt-2 fw-bold">員工資料維護</div>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>

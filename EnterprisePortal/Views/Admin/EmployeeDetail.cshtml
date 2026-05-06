@@ -1,0 +1,65 @@
+@model EnterprisePortal.Models.Employee
+@{
+    ViewData["Title"] = "員工詳細資料";
+    var roles = ViewBag.Roles as List<EnterprisePortal.Models.EmployeeRole> ?? new();
+}
+
+<div class="content-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0"><i class="bi bi-person-badge me-2"></i>員工詳細資料</h4>
+        <div class="d-flex gap-2">
+            <a asp-action="EmployeeEdit" asp-route-id="@Model.EmployeeId" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-pencil me-1"></i>編輯
+            </a>
+            <a asp-action="RoleAssign" asp-route-id="@Model.EmployeeId" class="btn btn-outline-warning btn-sm">
+                <i class="bi bi-shield-check me-1"></i>角色指派
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-3 text-center">
+            <img src="@(string.IsNullOrEmpty(Model.PhotoPath) ? "/img/default-avatar.svg" : Model.PhotoPath)"
+                 class="rounded-circle border shadow-sm mb-3" width="130" height="130"
+                 style="object-fit:cover;" onerror="this.src='/img/default-avatar.svg'" />
+            <div class="fw-bold fs-5">@Model.FullName</div>
+            <div class="text-muted">@Model.EnglishName</div>
+            <div class="mt-2">
+                @{
+                    var sc = Model.EmploymentStatus == EmploymentStatus.Active ? "bg-success" :
+                             Model.EmploymentStatus == EmploymentStatus.Resigned ? "bg-danger" : "bg-warning";
+                }
+                <span class="badge @sc">@Model.EmploymentStatus.GetDisplayName()</span>
+            </div>
+            <div class="mt-2">
+                @foreach (var er in roles)
+                {
+                    <span class="badge bg-info me-1">@er.Role?.RoleName</span>
+                }
+            </div>
+        </div>
+        <div class="col-md-9">
+            <div class="row g-3 small">
+                <div class="col-md-4"><label class="text-muted d-block">員工編號</label><strong>@Model.EmployeeId</strong></div>
+                <div class="col-md-4"><label class="text-muted d-block">性別</label>@Model.Gender.GetDisplayName()</div>
+                <div class="col-md-4"><label class="text-muted d-block">身份證號</label>@(Model.IdNumber ?? "-")</div>
+                <div class="col-md-4"><label class="text-muted d-block">婚姻狀況</label>@Model.MaritalStatus.GetDisplayName()</div>
+                <div class="col-md-4"><label class="text-muted d-block">最高學歷</label>@Model.EducationLevel.GetDisplayName()</div>
+                <div class="col-md-4"><label class="text-muted d-block">到職日期</label>@(Model.HireDate?.ToString("yyyy/MM/dd") ?? "-")</div>
+                <div class="col-12"><label class="text-muted d-block">聯絡地址</label>@(Model.Address ?? "-")</div>
+                <div class="col-md-4"><label class="text-muted d-block">連絡電話</label>@(Model.Phone ?? "-")</div>
+                <div class="col-md-4"><label class="text-muted d-block">手機號碼</label>@(Model.Mobile ?? "-")</div>
+                <div class="col-md-4"><label class="text-muted d-block">電子郵件</label>@(Model.Email ?? "-")</div>
+                <div class="col-md-4"><label class="text-muted d-block">所屬部門</label>@(Model.Department?.DepartmentName ?? "-")</div>
+                <div class="col-md-4"><label class="text-muted d-block">直屬主管</label>@(Model.Supervisor?.FullName ?? "-")</div>
+                <div class="col-md-4"><label class="text-muted d-block">擔任職稱</label>@(Model.JobTitle ?? "-")</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a asp-action="EmployeeList" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>返回列表
+        </a>
+    </div>
+</div>

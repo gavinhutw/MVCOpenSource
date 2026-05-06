@@ -1,0 +1,120 @@
+@model IEnumerable<EnterprisePortal.Models.OvertimeApplication>
+@{
+    ViewData["Title"] = "加班統計報表";
+    var byDept = ViewBag.ByDept as dynamic;
+    var byMonth = ViewBag.ByMonth as dynamic;
+}
+
+<div class="content-card">
+    <h4><i class="bi bi-clock-history me-2"></i>加班統計報表</h4>
+
+    <form asp-action="OvertimeReport" method="get" class="row g-2 mb-4">
+        <div class="col-md-2">
+            <select name="year" class="form-select form-select-sm" asp-items="@ViewBag.YearList">
+                <option value="">-- 年度 --</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select name="month" class="form-select form-select-sm">
+                <option value="">-- 全年 --</option>
+                @for (int m = 1; m <= 12; m++)
+                {
+                    if (ViewBag.Month?.ToString() == m.ToString()) { <option value="@m" selected>@m 月</option> }
+                    else { <option value="@m">@m 月</option> }
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select name="deptId" class="form-select form-select-sm" asp-items="@ViewBag.DepartmentList">
+                <option value="">-- 全部部門 --</option>
+            </select>
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-search me-1"></i>查詢</button>
+        </div>
+    </form>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card text-center p-3" style="border-color:#7c3aed;">
+                <div class="text-muted small">加班總件數</div>
+                <div class="display-6 fw-bold" style="color:#7c3aed;">@ViewBag.Total</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center p-3 border-warning">
+                <div class="text-muted small">加班總天數</div>
+                <div class="display-6 fw-bold text-warning">@ViewBag.TotalDays</div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <canvas id="overtimeMonthChart" height="80"></canvas>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <h6 class="fw-bold">依部門統計</h6>
+            <table class="table table-sm table-bordered">
+                <thead><tr><th>部門</th><th>件數</th><th>天數</th></tr></thead>
+                <tbody>
+                    @if (byDept != null) {
+                        foreach (var row in (dynamic)byDept) {
+                            <tr><td>@row.Dept</td><td>@row.Count</td><td>@row.Days</td></tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <h6 class="fw-bold mb-2">加班明細</h6>
+    <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle small">
+            <thead>
+                <tr><th>申請人</th><th>部門</th><th>加班起始</th><th>加班結束</th><th>天數</th><th>原因</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var o in Model)
+                {
+                    <tr>
+                        <td>@o.Applicant?.FullName (@o.ApplicantId)</td>
+                        <td>@o.Applicant?.Department?.DepartmentName</td>
+                        <td>@o.StartDate.ToString("yyyy/MM/dd")</td>
+                        <td>@o.EndDate.ToString("yyyy/MM/dd")</td>
+                        <td>@((o.EndDate - o.StartDate).Days + 1)</td>
+                        <td class="text-truncate" style="max-width:150px;" title="@o.Reason">@o.Reason</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    @{
+        var mLabels = Enumerable.Range(1, 12).Select(m => m + "月").ToList();
+        var mData = new List<int>();
+        for (int m = 1; m <= 12; m++) {
+            var cnt = 0;
+            if (byMonth != null) {
+                foreach (var row in (dynamic)byMonth) {
+                    if ((int)row.Month == m) { cnt = (int)row.Count; break; }
+                }
+            }
+            mData.Add(cnt);
+        }
+    }
+    new Chart(document.getElementById('overtimeMonthChart'), {
+        type: 'line',
+        data: {
+            labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(mLabels)),
+            datasets: [{ label: '加班件數', data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(mData)),
+                borderColor: '#7c3aed', backgroundColor: 'rgba(124,58,237,0.1)', fill: true, tension: 0.3 }]
+        },
+        options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+    });
+</script>
+}

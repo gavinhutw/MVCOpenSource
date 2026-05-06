@@ -1,0 +1,105 @@
+@model IEnumerable<EnterprisePortal.Models.Employee>
+@{
+    ViewData["Title"] = "員工管理後台";
+}
+
+<div class="content-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0"><i class="bi bi-people-fill me-2"></i>員工管理後台</h4>
+        <a asp-action="EmployeeCreate" class="btn btn-success">
+            <i class="bi bi-person-plus-fill me-1"></i>新增員工
+        </a>
+    </div>
+
+    <form asp-action="EmployeeList" method="get" class="row g-2 mb-3">
+        <div class="col-md-3">
+            <input type="text" name="search" class="form-control form-control-sm" placeholder="搜尋員工編號/姓名"
+                   value="@ViewBag.Search" />
+        </div>
+        <div class="col-md-3">
+            <select name="deptId" class="form-select form-select-sm" asp-items="@ViewBag.DepartmentList">
+                <option value="">-- 全部部門 --</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select name="status" class="form-select form-select-sm">
+                <option value="">-- 全部狀態 --</option>
+                @if (ViewBag.SelectedStatus?.ToString() == "1") { <option value="1" selected>在職</option> } else { <option value="1">在職</option> }
+                @if (ViewBag.SelectedStatus?.ToString() == "2") { <option value="2" selected>離職</option> } else { <option value="2">離職</option> }
+                @if (ViewBag.SelectedStatus?.ToString() == "3") { <option value="3" selected>留職停薪</option> } else { <option value="3">留職停薪</option> }
+            </select>
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-search me-1"></i>查詢</button>
+            <a asp-action="EmployeeList" class="btn btn-outline-secondary btn-sm ms-1">
+                <i class="bi bi-arrow-counterclockwise"></i> 清除
+            </a>
+        </div>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle small">
+            <thead>
+                <tr>
+                    <th>員工編號</th>
+                    <th>姓名</th>
+                    <th>所屬部門</th>
+                    <th>職稱</th>
+                    <th>到職日期</th>
+                    <th>在職狀況</th>
+                    <th style="width:180px;">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var emp in Model)
+                {
+                    var statusClass = emp.EmploymentStatus == EmploymentStatus.Active ? "bg-success" :
+                                      emp.EmploymentStatus == EmploymentStatus.Resigned ? "bg-danger" : "bg-warning";
+                    <tr>
+                        <td><code>@emp.EmployeeId</code></td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <img src="@(string.IsNullOrEmpty(emp.PhotoPath) ? "/img/default-avatar.svg" : emp.PhotoPath)"
+                                     width="32" height="32" class="rounded-circle" style="object-fit:cover;"
+                                     onerror="this.src='/img/default-avatar.svg'" />
+                                <span>@emp.FullName</span>
+                            </div>
+                        </td>
+                        <td>@(emp.Department?.DepartmentName ?? "-")</td>
+                        <td>@(emp.JobTitle ?? "-")</td>
+                        <td>@(emp.HireDate?.ToString("yyyy/MM/dd") ?? "-")</td>
+                        <td><span class="badge @statusClass">@emp.EmploymentStatus.GetDisplayName()</span></td>
+                        <td>
+                            <div class="d-flex gap-1 flex-wrap">
+                                <a asp-action="EmployeeDetail" asp-route-id="@emp.EmployeeId"
+                                   class="btn btn-sm btn-outline-info" title="查看">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a asp-action="EmployeeEdit" asp-route-id="@emp.EmployeeId"
+                                   class="btn btn-sm btn-outline-primary" title="編輯">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a asp-action="RoleAssign" asp-route-id="@emp.EmployeeId"
+                                   class="btn btn-sm btn-outline-warning" title="角色指派">
+                                    <i class="bi bi-shield-check"></i>
+                                </a>
+                                @if (emp.EmploymentStatus != EmploymentStatus.Resigned)
+                                {
+                                    <form asp-action="EmployeeDelete" method="post" class="d-inline"
+                                          onsubmit="return confirm('確定將 @emp.FullName 設為離職？')">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@emp.EmployeeId" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="離職">
+                                            <i class="bi bi-person-x"></i>
+                                        </button>
+                                    </form>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="text-muted small">共 @Model.Count() 位員工</div>
+</div>

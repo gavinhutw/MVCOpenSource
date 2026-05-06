@@ -1,0 +1,75 @@
+@using EnterprisePortal.Models
+@{
+    ViewData["Title"] = "加班批示";
+    var pendingApprovals = ViewBag.PendingApprovals as List<OvertimeApprover> ?? new List<OvertimeApprover>();
+}
+
+<div class="content-card">
+    <h4><i class="bi bi-check-circle me-2"></i>加班批示</h4>
+
+    @if (!pendingApprovals.Any())
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle me-1"></i>目前沒有待批示的加班申請單。
+        </div>
+    }
+    else
+    {
+        @foreach (var approver in pendingApprovals)
+        {
+            var app = approver.OvertimeApplication!;
+            <div class="card mb-3 border-start border-4" style="border-color:#7c3aed!important;">
+                <div class="card-header d-flex justify-content-between align-items-center bg-light">
+                    <span>
+                        <strong>@app.Applicant?.FullName</strong> (@app.ApplicantId) 申請加班
+                    </span>
+                    <span class="text-muted small">申請時間：@app.AppliedAt.ToString("yyyy/MM/dd HH:mm")</span>
+                </div>
+                <div class="card-body">
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">加班期間</small>
+                            <strong>@app.StartDate.ToString("yyyy/MM/dd") ~ @app.EndDate.ToString("yyyy/MM/dd")</strong>
+                        </div>
+                        <div class="col-md-8">
+                            <small class="text-muted d-block">加班原因</small>
+                            @app.Reason
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <small class="text-muted d-block">簽核流程</small>
+                        <div class="d-flex flex-wrap gap-2 mt-1">
+                            @foreach (var a in app.Approvers.OrderBy(x => x.ApprovalOrder))
+                            {
+                                var badgeClass = a.Status == ApprovalStatus.Approved ? "bg-success" :
+                                                 a.Status == ApprovalStatus.Rejected ? "bg-danger" : "bg-secondary";
+                                <span class="badge @badgeClass">
+                                    @(a.ApprovalOrder == 0 ? "代理人" : $"第{a.ApprovalOrder}關") @a.Approver?.FullName
+                                </span>
+                            }
+                        </div>
+                    </div>
+
+                    <form asp-action="ProcessApproval" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="approverRecordId" value="@approver.Id" />
+                        <div class="mb-3">
+                            <label class="form-label">簽核意見</label>
+                            <textarea name="comment" class="form-control" rows="2" placeholder="請輸入簽核意見（選填）"></textarea>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" name="action" value="approve" class="btn btn-success">
+                                <i class="bi bi-check-lg me-1"></i>同意
+                            </button>
+                            <button type="submit" name="action" value="reject" class="btn btn-danger"
+                                    onclick="return confirm('確定要拒絕此加班申請嗎？')">
+                                <i class="bi bi-x-lg me-1"></i>拒絕
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        }
+    }
+</div>

@@ -1,0 +1,172 @@
+@model IEnumerable<EnterprisePortal.Models.AttendanceRecord>
+@{
+    ViewData["Title"] = "刷卡記錄報表";
+    var alerts = ViewBag.Alerts as dynamic;
+    var dailySummary = ViewBag.DailySummary as dynamic;
+}
+
+<div class="content-card">
+    <h4><i class="bi bi-fingerprint me-2"></i>刷卡記錄報表</h4>
+
+    <form asp-action="AttendanceReport" method="get" class="row g-2 mb-4">
+        <div class="col-md-2">
+            <select name="year" class="form-select form-select-sm" asp-items="@ViewBag.YearList">
+                <option value="">-- 年度 --</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select name="month" class="form-select form-select-sm" asp-items="@ViewBag.MonthList">
+                <option value="">-- 月份 --</option>
+            </select>
+        </div>
+        @if (User.IsInRole("系統管理員"))
+        {
+            <div class="col-md-3">
+                <select name="empId" class="form-select form-select-sm" asp-items="@ViewBag.EmployeeList">
+                    <option value="">-- 全部員工 --</option>
+                </select>
+            </div>
+        }
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-search me-1"></i>查詢</button>
+        </div>
+    </form>
+
+    @{
+        var alertList = alerts as IEnumerable<EnterprisePortal.Models.AttendanceRecord>;
+        if (alertList != null && alertList.Any())
+        {
+            <div class="alert alert-warning mb-3">
+                <i class="bi bi-thermometer-high me-1"></i>
+                <strong>體溫異常警示（>37.5℃）：</strong>本期共 @alertList.Count() 筆記錄體溫偏高，請注意！
+            </div>
+        }
+    }
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card text-center p-3 border-success">
+                <div class="text-muted small">刷卡總筆數</div>
+                <div class="display-6 fw-bold text-success">@Model.Count()</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center p-3 border-primary">
+                <div class="text-muted small">上班刷卡</div>
+                <div class="display-6 fw-bold text-primary">@Model.Count(r => r.ClockType == ClockType.ClockIn)</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center p-3" style="border-color:#7c3aed;">
+                <div class="text-muted small">下班刷卡</div>
+                <div class="display-6 fw-bold" style="color:#7c3aed;">@Model.Count(r => r.ClockType == ClockType.ClockOut)</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center p-3 border-danger">
+                <div class="text-muted small">體溫異常(>37.5℃)</div>
+                <div class="display-6 fw-bold text-danger">@Model.Count(r => r.Temperature > 37.5m)</div>
+            </div>
+        </div>
+    </div>
+
+    <ul class="nav nav-tabs mb-3" id="reportTab">
+        <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#summary">每日摘要</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#detail">刷卡明細</a></li>
+        @{
+            var alertList2 = alerts as IEnumerable<EnterprisePortal.Models.AttendanceRecord>;
+            if (alertList2 != null && alertList2.Any())
+            {
+                <li class="nav-item"><a class="nav-link text-danger" data-bs-toggle="tab" href="#tempAlert">
+                    <i class="bi bi-thermometer-high me-1"></i>體溫警示 (@alertList2.Count())
+                </a></li>
+            }
+        }
+    </ul>
+
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="summary">
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered align-middle small">
+                    <thead>
+                        <tr><th>日期</th><th>員工</th><th>上班時間</th><th>下班時間</th><th>最高體溫</th><th>工時</th></tr>
+                    </thead>
+                    <tbody>
+                        @if (dailySummary != null)
+                        {
+                            foreach (var row in (dynamic)dailySummary)
+                            {
+                                var highTemp = (decimal)row.MaxTemp > 37.5m ? "text-danger fw-bold" : "";
+                                var workHours = row.ClockIn != null && row.ClockOut != null
+                                    ? $"{((DateTime)row.ClockOut - (DateTime)row.ClockIn).TotalHours:F1} 小時"
+                                    : "-";
+                                <tr>
+                                    <td>@((DateTime)row.Date).ToString("yyyy/MM/dd")</td>
+                                    <td>@row.EmployeeName (@row.EmployeeId)</td>
+                                    <td>@(row.ClockIn != null ? ((DateTime)row.ClockIn).ToString("HH:mm") : "-")</td>
+                                    <td>@(row.ClockOut != null ? ((DateTime)row.ClockOut).ToString("HH:mm") : "-")</td>
+                                    <td class="@highTemp">@((decimal)row.MaxTemp) ℃</td>
+                                    <td>@workHours</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="detail">
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered align-middle small">
+                    <thead>
+                        <tr><th>刷卡時間</th><th>員工</th><th>刷卡類別</th><th>體溫</th><th>IP位址</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var r in Model.OrderByDescending(x => x.RecordedAt))
+                        {
+                            var tempClass = r.Temperature > 37.5m ? "text-danger fw-bold" : "";
+                            <tr>
+                                <td>@r.RecordedAt.ToString("yyyy/MM/dd HH:mm:ss")</td>
+                                <td>@r.Employee?.FullName (@r.EmployeeId)</td>
+                                <td>
+                                    <span class="badge @(r.ClockType == ClockType.ClockIn ? "bg-success" : "bg-danger")">
+                                        @r.ClockType.GetDisplayName()
+                                    </span>
+                                </td>
+                                <td class="@tempClass">@r.Temperature ℃ @(r.Temperature > 37.5m ? "⚠️" : "")</td>
+                                <td>@(r.IpAddress ?? "-")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="tempAlert">
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered align-middle small">
+                    <thead>
+                        <tr><th>刷卡時間</th><th>員工</th><th>體溫</th><th>刷卡類別</th></tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            var alertList3 = alerts as IEnumerable<EnterprisePortal.Models.AttendanceRecord>;
+                            if (alertList3 != null)
+                            {
+                                foreach (var r in alertList3.OrderByDescending(x => x.Temperature))
+                                {
+                                    <tr class="table-danger">
+                                        <td>@r.RecordedAt.ToString("yyyy/MM/dd HH:mm")</td>
+                                        <td>@r.Employee?.FullName (@r.EmployeeId)</td>
+                                        <td class="fw-bold text-danger">@r.Temperature ℃</td>
+                                        <td>@r.ClockType.GetDisplayName()</td>
+                                    </tr>
+                                }
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

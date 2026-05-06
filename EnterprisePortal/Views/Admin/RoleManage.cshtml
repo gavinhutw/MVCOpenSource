@@ -1,0 +1,79 @@
+@model IEnumerable<EnterprisePortal.Models.Role>
+@{
+    ViewData["Title"] = "角色管理";
+}
+
+<div class="content-card">
+    <h4><i class="bi bi-shield-lock me-2"></i>角色管理</h4>
+
+    <div class="row g-4">
+        <div class="col-md-7">
+            <h6 class="fw-bold mb-3">現有角色列表</h6>
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle">
+                    <thead>
+                        <tr>
+                            <th>角色代碼</th>
+                            <th>角色名稱</th>
+                            <th>說明</th>
+                            <th>人數</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var role in Model)
+                        {
+                            var isSystem = role.RoleId is "ADMIN" or "MANAGER" or "EMPLOYEE";
+                            <tr>
+                                <td><code>@role.RoleId</code></td>
+                                <td><strong>@role.RoleName</strong></td>
+                                <td class="text-muted small">@(role.Description ?? "-")</td>
+                                <td>@role.EmployeeRoles.Count 人</td>
+                                <td>
+                                    @if (!isSystem)
+                                    {
+                                        <form asp-action="RoleDelete" method="post" class="d-inline"
+                                              onsubmit="return confirm('確定刪除角色「@role.RoleName」？')">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@role.RoleId" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">系統內建</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            <h6 class="fw-bold mb-3">新增角色</h6>
+            <form asp-action="RoleCreate" method="post" class="card p-3 bg-light">
+                @Html.AntiForgeryToken()
+                <div class="mb-3">
+                    <label class="form-label">角色代碼 <span class="text-danger">*</span></label>
+                    <input type="text" name="RoleId" class="form-control" placeholder="例：FINANCE" required maxlength="20" />
+                    <div class="form-text">英文大寫，不可與現有代碼重複</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">角色名稱 <span class="text-danger">*</span></label>
+                    <input type="text" name="RoleName" class="form-control" placeholder="例：財務主管" required maxlength="50" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">角色說明</label>
+                    <textarea name="Description" class="form-control" rows="2" maxlength="200"></textarea>
+                </div>
+                <button type="submit" class="btn btn-success w-100">
+                    <i class="bi bi-plus-circle me-1"></i>新增角色
+                </button>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,206 @@
+@{
+    ViewData["Title"] = "管理儀表板";
+}
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card text-white h-100" style="background:linear-gradient(135deg,#1a3a5c,#2560a0);">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="small opacity-75">在職員工</div>
+                        <div class="display-6 fw-bold">@ViewBag.TotalEmployees</div>
+                    </div>
+                    <i class="bi bi-people-fill" style="font-size:2.5rem;opacity:0.4;"></i>
+                </div>
+                <div class="small mt-1 opacity-75">共 @ViewBag.TotalDepts 個部門</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white h-100" style="background:linear-gradient(135deg,#f59e0b,#d97706);">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="small opacity-75">待簽核假單</div>
+                        <div class="display-6 fw-bold">@ViewBag.PendingLeaves</div>
+                    </div>
+                    <i class="bi bi-hourglass-split" style="font-size:2.5rem;opacity:0.4;"></i>
+                </div>
+                <div class="small mt-1 opacity-75">本月已核准：@ViewBag.MonthLeaves 件</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white h-100" style="background:linear-gradient(135deg,#7c3aed,#a855f7);">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="small opacity-75">待簽核加班單</div>
+                        <div class="display-6 fw-bold">@ViewBag.PendingOvertimes</div>
+                    </div>
+                    <i class="bi bi-clock-history" style="font-size:2.5rem;opacity:0.4;"></i>
+                </div>
+                <div class="small mt-1 opacity-75">本月已核准：@ViewBag.MonthOvertimes 件</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white h-100" style="background:linear-gradient(135deg,#0f766e,#14b8a6);">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="small opacity-75">今日刷卡人次</div>
+                        <div class="display-6 fw-bold">@ViewBag.TodayClockIns</div>
+                    </div>
+                    <i class="bi bi-fingerprint" style="font-size:2.5rem;opacity:0.4;"></i>
+                </div>
+                <div class="small mt-1 opacity-75">
+                    @if ((int)ViewBag.HighTempToday > 0)
+                    {
+                        <span class="text-warning fw-bold"><i class="bi bi-thermometer-high"></i> 體溫異常：@ViewBag.HighTempToday 人</span>
+                    }
+                    else
+                    {
+                        <span>今日無體溫異常</span>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-8">
+        <div class="content-card">
+            <h6 class="fw-bold mb-3"><i class="bi bi-bar-chart-fill me-1"></i>近六個月請假統計</h6>
+            <canvas id="leaveMonthChart" height="80"></canvas>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="content-card">
+            <h6 class="fw-bold mb-3"><i class="bi bi-pie-chart-fill me-1"></i>本年請假類別佔比</h6>
+            <canvas id="leaveTypeChart" height="160"></canvas>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="content-card">
+            <h6 class="fw-bold mb-3"><i class="bi bi-diagram-2 me-1"></i>各部門人數分布</h6>
+            <canvas id="deptChart" height="120"></canvas>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="content-card">
+            <h6 class="fw-bold mb-3"><i class="bi bi-lightning-charge me-1"></i>快速入口</h6>
+            <div class="d-grid gap-2">
+                <a asp-action="LeaveReport" class="btn btn-outline-primary">
+                    <i class="bi bi-calendar-x me-1"></i>請假統計報表
+                </a>
+                <a asp-action="OvertimeReport" class="btn btn-outline-purple" style="border-color:#7c3aed;color:#7c3aed;">
+                    <i class="bi bi-clock-history me-1"></i>加班統計報表
+                </a>
+                <a asp-action="AttendanceReport" class="btn btn-outline-success">
+                    <i class="bi bi-fingerprint me-1"></i>刷卡記錄報表
+                </a>
+                <a asp-controller="Admin" asp-action="EmployeeList" class="btn btn-outline-secondary">
+                    <i class="bi bi-people me-1"></i>員工管理後台
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // Leave by month chart
+    @{
+        var leaveByMonth = ViewBag.LeaveByMonth as dynamic ?? new List<dynamic>();
+        var today = DateTime.Today;
+        var monthLabels = new List<string>();
+        var monthData = new List<int>();
+        for (int i = 5; i >= 0; i--)
+        {
+            var d = today.AddMonths(-i);
+            monthLabels.Add($"{d.Month}月");
+            var count = 0;
+            if (leaveByMonth != null)
+            {
+                foreach (var item in (dynamic)leaveByMonth)
+                {
+                    if ((int)item.Year == d.Year && (int)item.Month == d.Month)
+                        count = (int)item.Count;
+                }
+            }
+            monthData.Add(count);
+        }
+    }
+    new Chart(document.getElementById('leaveMonthChart'), {
+        type: 'bar',
+        data: {
+            labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(monthLabels)),
+            datasets: [{
+                label: '請假件數',
+                data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(monthData)),
+                backgroundColor: 'rgba(37,96,160,0.7)',
+                borderRadius: 4
+            }]
+        },
+        options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+    });
+
+    // Leave by type pie
+    @{
+        var leaveByType = ViewBag.LeaveByType as dynamic;
+        var typeLabels = new List<string>();
+        var typeData = new List<int>();
+        if (leaveByType != null)
+        {
+            foreach (var item in (dynamic)leaveByType)
+            {
+                typeLabels.Add(((EnterprisePortal.Models.LeaveType)item.Type).GetDisplayName());
+                typeData.Add((int)item.Count);
+            }
+        }
+    }
+    new Chart(document.getElementById('leaveTypeChart'), {
+        type: 'doughnut',
+        data: {
+            labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(typeLabels)),
+            datasets: [{
+                data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(typeData)),
+                backgroundColor: ['#2560a0','#7c3aed','#10b981','#f59e0b','#ef4444']
+            }]
+        },
+        options: { plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } } }
+    });
+
+    // Dept bar
+    @{
+        var deptCount = ViewBag.DeptCount as dynamic;
+        var deptLabels = new List<string>();
+        var deptData = new List<int>();
+        if (deptCount != null)
+        {
+            foreach (var item in (dynamic)deptCount)
+            {
+                deptLabels.Add((string)item.Dept);
+                deptData.Add((int)item.Count);
+            }
+        }
+    }
+    new Chart(document.getElementById('deptChart'), {
+        type: 'bar',
+        data: {
+            labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(deptLabels)),
+            datasets: [{
+                label: '人數',
+                data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(deptData)),
+                backgroundColor: 'rgba(16,185,129,0.7)',
+                borderRadius: 4
+            }]
+        },
+        options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+    });
+</script>
+}

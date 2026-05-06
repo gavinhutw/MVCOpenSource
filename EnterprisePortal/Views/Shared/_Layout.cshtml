@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - 企業入口網站</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style>
+        :root {
+            --primary: #1a3a5c;
+            --primary-light: #2560a0;
+            --accent: #e8a020;
+            --sidebar-bg: #f0f4f8;
+            --sidebar-width: 240px;
+        }
+        body { background: #f5f7fa; font-family: 'Microsoft JhengHei', Arial, sans-serif; }
+
+        /* Banner */
+        .banner {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: #fff;
+            padding: 0;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            position: sticky; top: 0; z-index: 1000;
+        }
+        .banner-logo { font-size: 1.5rem; font-weight: 700; letter-spacing: 2px; padding: 0 24px; flex: 1; }
+        .banner-logo span { color: var(--accent); }
+        .banner-info { font-size: 0.85rem; padding: 0 20px; text-align: right; }
+        .banner-info .user-name { font-size: 1rem; font-weight: 600; }
+        .banner-logout { padding: 0 16px; }
+        .banner-logout .btn { border-color: rgba(255,255,255,0.5); color: #fff; font-size: 0.8rem; }
+        .banner-logout .btn:hover { background: rgba(255,255,255,0.15); }
+
+        /* Main layout */
+        .main-layout { display: flex; min-height: calc(100vh - 70px); }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--sidebar-bg);
+            border-right: 1px solid #d0dae6;
+            padding: 16px 0;
+            flex-shrink: 0;
+            overflow-y: auto;
+        }
+        .sidebar-title { font-size: 0.7rem; font-weight: 700; color: #8a9ab0; text-transform: uppercase; letter-spacing: 1px; padding: 8px 16px 4px; margin-top: 8px; }
+        .sidebar .nav-group { margin-bottom: 4px; }
+        .sidebar .nav-group-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 16px; cursor: pointer; font-weight: 600; color: var(--primary);
+            font-size: 0.9rem; border-left: 3px solid transparent;
+            transition: all 0.2s;
+        }
+        .sidebar .nav-group-header:hover { background: #dce8f5; border-left-color: var(--primary-light); }
+        .sidebar .nav-group-header i.icon { margin-right: 8px; width: 18px; text-align: center; }
+        .sidebar .nav-group-header i.arrow { transition: transform 0.2s; font-size: 0.75rem; }
+        .sidebar .nav-group-header.collapsed i.arrow { transform: rotate(-90deg); }
+        .sidebar .nav-sub { list-style: none; padding: 0; margin: 0; background: #e4edf5; }
+        .sidebar .nav-sub li a {
+            display: block; padding: 8px 16px 8px 44px; font-size: 0.85rem; color: #3a5070;
+            text-decoration: none; border-left: 3px solid transparent;
+            transition: all 0.15s;
+        }
+        .sidebar .nav-sub li a:hover, .sidebar .nav-sub li a.active {
+            background: #ccddf0; color: var(--primary); border-left-color: var(--accent); font-weight: 600;
+        }
+
+        /* Content area */
+        .content-area { flex: 1; padding: 24px; overflow-y: auto; }
+        .content-card { background: #fff; border-radius: 8px; box-shadow: 0 1px 6px rgba(0,0,0,0.08); padding: 24px; margin-bottom: 20px; }
+        .content-card h4 { color: var(--primary); border-bottom: 2px solid var(--accent); padding-bottom: 10px; margin-bottom: 20px; }
+
+        /* Alert */
+        .alert { border-radius: 6px; }
+
+        /* Table */
+        .table th { background: var(--primary); color: #fff; font-weight: 500; }
+        .table-hover tbody tr:hover { background: #eef4fb; }
+
+        /* Status badges */
+        .badge-pending { background: #f59e0b; }
+        .badge-inprogress { background: #3b82f6; }
+        .badge-approved { background: #10b981; }
+        .badge-rejected { background: #ef4444; }
+        .badge-withdrawn { background: #6b7280; }
+
+        /* Form styles */
+        .form-label { font-weight: 500; color: #374151; }
+        .approver-row { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; margin-bottom: 8px; }
+        .btn-add-approver { border-style: dashed; }
+
+        /* Login page */
+        .login-page { min-height: 100vh; background: linear-gradient(135deg, #1a3a5c 0%, #2560a0 60%, #1a3a5c 100%); display: flex; align-items: center; justify-content: center; }
+        .login-card { background: #fff; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); padding: 40px; width: 420px; max-width: 95vw; }
+        .login-title { text-align: center; color: var(--primary); font-size: 1.6rem; font-weight: 700; margin-bottom: 28px; }
+        .login-title .sub { font-size: 0.9rem; color: #888; font-weight: 400; display: block; margin-top: 4px; }
+        .captcha-img { cursor: pointer; border: 1px solid #dee2e6; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <header class="banner">
+            <div class="banner-logo">
+                &#9670; <span>ENTERPRISE</span> PORTAL
+            </div>
+            <div class="banner-info">
+                <div class="user-name"><i class="bi bi-person-circle me-1"></i>@User.Identity.Name</div>
+                <div>
+                    <small>
+                        @User.FindFirst("DepartmentName")?.Value &nbsp;|&nbsp;
+                        @User.FindFirst("JobTitle")?.Value &nbsp;|&nbsp;
+                        IP：@Context.Connection.RemoteIpAddress
+                    </small>
+                </div>
+            </div>
+            <div class="banner-logout">
+                <form asp-controller="Account" asp-action="Logout" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-outline-light btn-sm"><i class="bi bi-box-arrow-right me-1"></i>登出</button>
+                </form>
+            </div>
+        </header>
+        <div class="main-layout">
+            <nav class="sidebar" id="sidebar">
+                <div class="sidebar-title">功能選單</div>
+
+                <div class="nav-group">
+                    <div class="nav-group-header" onclick="toggleMenu(this)">
+                        <span><i class="bi bi-calendar-x icon"></i>請假作業</span>
+                        <i class="bi bi-chevron-down arrow"></i>
+                    </div>
+                    <ul class="nav-sub">
+                        <li><a asp-controller="Leave" asp-action="Apply"><i class="bi bi-pencil-square me-1"></i>請假申請</a></li>
+                        <li><a asp-controller="Leave" asp-action="Approve"><i class="bi bi-check-circle me-1"></i>請假批示</a></li>
+                        <li><a asp-controller="Leave" asp-action="Query"><i class="bi bi-search me-1"></i>請假記錄查詢</a></li>
+                    </ul>
+                </div>
+
+                <div class="nav-group">
+                    <div class="nav-group-header" onclick="toggleMenu(this)">
+                        <span><i class="bi bi-clock-history icon"></i>加班作業</span>
+                        <i class="bi bi-chevron-down arrow"></i>
+                    </div>
+                    <ul class="nav-sub">
+                        <li><a asp-controller="Overtime" asp-action="Apply"><i class="bi bi-pencil-square me-1"></i>加班申請</a></li>
+                        <li><a asp-controller="Overtime" asp-action="Approve"><i class="bi bi-check-circle me-1"></i>加班批示</a></li>
+                        <li><a asp-controller="Overtime" asp-action="Query"><i class="bi bi-search me-1"></i>加班記錄查詢</a></li>
+                    </ul>
+                </div>
+
+                <div class="nav-group">
+                    <div class="nav-group-header" onclick="toggleMenu(this)">
+                        <span><i class="bi bi-fingerprint icon"></i>刷卡作業</span>
+                        <i class="bi bi-chevron-down arrow"></i>
+                    </div>
+                    <ul class="nav-sub">
+                        <li><a asp-controller="Attendance" asp-action="Index"><i class="bi bi-card-checklist me-1"></i>上下班刷卡</a></li>
+                    </ul>
+                </div>
+
+                <div class="nav-group">
+                    <div class="nav-group-header" onclick="toggleMenu(this)">
+                        <span><i class="bi bi-person-gear icon"></i>員工資料維護</span>
+                        <i class="bi bi-chevron-down arrow"></i>
+                    </div>
+                    <ul class="nav-sub">
+                        <li><a asp-controller="Employee" asp-action="Index"><i class="bi bi-person-lines-fill me-1"></i>基本資料維護</a></li>
+                    </ul>
+                </div>
+
+                @if (User.IsInRole("系統管理員") || User.IsInRole("主管"))
+                {
+                    <div class="nav-group">
+                        <div class="nav-group-header" onclick="toggleMenu(this)">
+                            <span><i class="bi bi-bar-chart-fill icon"></i>報表統計</span>
+                            <i class="bi bi-chevron-down arrow"></i>
+                        </div>
+                        <ul class="nav-sub">
+                            @if (User.IsInRole("系統管理員"))
+                            {
+                                <li><a asp-controller="Report" asp-action="Dashboard"><i class="bi bi-speedometer2 me-1"></i>管理儀表板</a></li>
+                            }
+                            <li><a asp-controller="Report" asp-action="LeaveReport"><i class="bi bi-calendar-x me-1"></i>請假統計報表</a></li>
+                            <li><a asp-controller="Report" asp-action="OvertimeReport"><i class="bi bi-clock-history me-1"></i>加班統計報表</a></li>
+                            <li><a asp-controller="Report" asp-action="AttendanceReport"><i class="bi bi-fingerprint me-1"></i>刷卡記錄報表</a></li>
+                        </ul>
+                    </div>
+                }
+
+                @if (User.IsInRole("系統管理員"))
+                {
+                    <div class="nav-group">
+                        <div class="nav-group-header" onclick="toggleMenu(this)" style="color:#c0392b;">
+                            <span><i class="bi bi-gear-fill icon"></i>系統管理</span>
+                            <i class="bi bi-chevron-down arrow"></i>
+                        </div>
+                        <ul class="nav-sub">
+                            <li><a asp-controller="Admin" asp-action="EmployeeList"><i class="bi bi-people-fill me-1"></i>員工管理後台</a></li>
+                            <li><a asp-controller="Admin" asp-action="RoleManage"><i class="bi bi-shield-lock me-1"></i>角色管理</a></li>
+                        </ul>
+                    </div>
+                }
+            </nav>
+            <main class="content-area">
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="bi bi-check-circle-fill me-2"></i>@TempData["Success"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                }
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["Error"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                }
+                @RenderBody()
+            </main>
+        </div>
+    }
+    else
+    {
+        @RenderBody()
+    }
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function toggleMenu(header) {
+            var sub = header.nextElementSibling;
+            var arrow = header.querySelector('.arrow');
+            if (sub.style.display === 'none') {
+                sub.style.display = 'block';
+                header.classList.remove('collapsed');
+            } else {
+                sub.style.display = 'none';
+                header.classList.add('collapsed');
+            }
+        }
+        // Highlight active menu link
+        document.addEventListener('DOMContentLoaded', function () {
+            var path = window.location.pathname.toLowerCase();
+            document.querySelectorAll('.nav-sub li a').forEach(function (link) {
+                if (link.getAttribute('href') && path.startsWith(link.getAttribute('href').toLowerCase())) {
+                    link.classList.add('active');
+                    // Expand parent
+                    var sub = link.closest('.nav-sub');
+                    if (sub) sub.style.display = 'block';
+                    var header = sub ? sub.previousElementSibling : null;
+                    if (header) header.classList.remove('collapsed');
+                }
+            });
+        });
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,104 @@
+@model EnterprisePortal.Models.LeaveApplication
+@using EnterprisePortal.Models
+@{
+    ViewData["Title"] = "請假申請詳情";
+}
+
+<div class="content-card">
+    <h4><i class="bi bi-file-text me-2"></i>請假申請詳情</h4>
+
+    <div class="row g-3">
+        <div class="col-md-4">
+            <label class="text-muted small">申請人</label>
+            <div class="fw-bold">@Model.Applicant?.FullName (@Model.ApplicantId)</div>
+        </div>
+        <div class="col-md-4">
+            <label class="text-muted small">請假類別</label>
+            <div><span class="badge bg-primary fs-6">@Model.LeaveType.GetDisplayName()</span></div>
+        </div>
+        <div class="col-md-4">
+            <label class="text-muted small">申請狀態</label>
+            @{
+                var badgeClass = Model.Status switch {
+                    ApplicationStatus.Pending => "bg-warning",
+                    ApplicationStatus.InProgress => "bg-info",
+                    ApplicationStatus.Approved => "bg-success",
+                    ApplicationStatus.Rejected => "bg-danger",
+                    _ => "bg-secondary"
+                };
+            }
+            <div><span class="badge @badgeClass fs-6">@Model.Status.GetDisplayName()</span></div>
+        </div>
+        <div class="col-md-4">
+            <label class="text-muted small">請假起始日期</label>
+            <div class="fw-bold">@Model.StartDate.ToString("yyyy/MM/dd")</div>
+        </div>
+        <div class="col-md-4">
+            <label class="text-muted small">請假結束日期</label>
+            <div class="fw-bold">@Model.EndDate.ToString("yyyy/MM/dd")</div>
+        </div>
+        <div class="col-md-4">
+            <label class="text-muted small">申請時間</label>
+            <div>@Model.AppliedAt.ToString("yyyy/MM/dd HH:mm")</div>
+        </div>
+        <div class="col-md-6">
+            <label class="text-muted small">代理人</label>
+            <div>@Model.Proxy?.FullName (@Model.ProxyId)</div>
+        </div>
+        <div class="col-12">
+            <label class="text-muted small">請假原因</label>
+            <div class="p-3 bg-light rounded">@Model.Reason</div>
+        </div>
+        @if (!string.IsNullOrEmpty(Model.AttachmentPath))
+        {
+            <div class="col-12">
+                <label class="text-muted small">附件</label>
+                <div>
+                    <a href="@Model.AttachmentPath" target="_blank" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-paperclip me-1"></i>下載附件
+                    </a>
+                </div>
+            </div>
+        }
+    </div>
+
+    <hr class="my-4" />
+    <h6 class="fw-bold mb-3"><i class="bi bi-diagram-3 me-1"></i>簽核流程進度</h6>
+    <div class="table-responsive">
+        <table class="table table-bordered align-middle">
+            <thead>
+                <tr>
+                    <th style="width:80px;">順序</th>
+                    <th>簽核人</th>
+                    <th>角色</th>
+                    <th>狀態</th>
+                    <th>簽核意見</th>
+                    <th>簽核時間</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var a in Model.Approvers.OrderBy(x => x.ApprovalOrder))
+                {
+                    var rowClass = a.Status == ApprovalStatus.Approved ? "table-success" :
+                                   a.Status == ApprovalStatus.Rejected ? "table-danger" : "";
+                    <tr class="@rowClass">
+                        <td class="text-center">@(a.ApprovalOrder + 1)</td>
+                        <td>@a.Approver?.FullName (@a.ApproverId)</td>
+                        <td>@(a.ApprovalOrder == 0 ? "代理人" : "簽核主管")</td>
+                        <td>
+                            <span class="badge @(a.Status == ApprovalStatus.Approved ? "bg-success" : a.Status == ApprovalStatus.Rejected ? "bg-danger" : "bg-secondary")">
+                                @a.Status.GetDisplayName()
+                            </span>
+                        </td>
+                        <td>@(a.Comment ?? "-")</td>
+                        <td>@(a.ApprovedAt?.ToString("yyyy/MM/dd HH:mm") ?? "-")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <a asp-action="Query" class="btn btn-outline-secondary mt-2">
+        <i class="bi bi-arrow-left me-1"></i>返回列表
+    </a>
+</div>

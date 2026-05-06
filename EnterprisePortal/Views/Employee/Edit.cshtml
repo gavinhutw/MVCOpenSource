@@ -1,0 +1,166 @@
+@model EnterprisePortal.Models.Employee
+@{
+    ViewData["Title"] = "員工基本資料維護";
+}
+
+<div class="content-card">
+    <h4><i class="bi bi-person-lines-fill me-2"></i>員工基本資料維護</h4>
+
+    <form asp-action="Edit" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="EmployeeId" />
+
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
+
+        <!-- 大頭照區 -->
+        <div class="row mb-4">
+            <div class="col-md-3 text-center">
+                <div class="mb-2">
+                    <img id="photoPreview"
+                         src="@(string.IsNullOrEmpty(Model.PhotoPath) ? "/img/default-avatar.svg" : Model.PhotoPath)"
+                         class="rounded-circle border" width="120" height="120" style="object-fit:cover;"
+                         onerror="this.src='/img/default-avatar.svg'" />
+                </div>
+                <label class="form-label small">員工大頭照</label>
+                <input type="file" name="photoFile" class="form-control form-control-sm"
+                       accept="image/*" onchange="previewPhoto(this)" />
+            </div>
+            <div class="col-md-9">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">員工編號</label>
+                        <input asp-for="EmployeeId" class="form-control" readonly />
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="FullName" class="form-label">員工姓名 <span class="text-danger">*</span></label>
+                        <input asp-for="FullName" class="form-control" />
+                        <span asp-validation-for="FullName" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="EnglishName" class="form-label">英文姓名</label>
+                        <input asp-for="EnglishName" class="form-control" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr />
+        <h6 class="fw-bold text-primary mb-3">個人基本資料</h6>
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label asp-for="Gender" class="form-label">性別</label>
+                <select asp-for="Gender" asp-items="@ViewBag.GenderList" class="form-select"></select>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="IdNumber" class="form-label">身份證號</label>
+                <input asp-for="IdNumber" class="form-control" />
+            </div>
+            <div class="col-md-3">
+                <label asp-for="MaritalStatus" class="form-label">婚姻狀況</label>
+                <select asp-for="MaritalStatus" asp-items="@ViewBag.MaritalStatusList" class="form-select"></select>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="EducationLevel" class="form-label">最高學歷</label>
+                <select asp-for="EducationLevel" asp-items="@ViewBag.EducationLevelList" class="form-select"></select>
+            </div>
+        </div>
+
+        <hr />
+        <h6 class="fw-bold text-primary mb-3">聯絡資料</h6>
+        <div class="row g-3">
+            <div class="col-12">
+                <label asp-for="Address" class="form-label">聯絡地址</label>
+                <input asp-for="Address" class="form-control" />
+            </div>
+            <div class="col-md-4">
+                <label asp-for="Phone" class="form-label">連絡電話</label>
+                <input asp-for="Phone" class="form-control" />
+            </div>
+            <div class="col-md-4">
+                <label asp-for="Mobile" class="form-label">手機號碼</label>
+                <input asp-for="Mobile" class="form-control" />
+            </div>
+            <div class="col-md-4">
+                <label asp-for="Email" class="form-label">電子郵件信箱</label>
+                <input asp-for="Email" type="email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger small"></span>
+            </div>
+        </div>
+
+        <hr />
+        <h6 class="fw-bold text-primary mb-3">在職資料</h6>
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label asp-for="HireDate" class="form-label">到職日期</label>
+                <input asp-for="HireDate" type="date" class="form-control" />
+            </div>
+            <div class="col-md-3">
+                <label asp-for="EmploymentStatus" class="form-label">在職狀況</label>
+                <select asp-for="EmploymentStatus" asp-items="@ViewBag.EmploymentStatusList" class="form-select"></select>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="DepartmentId" class="form-label">所屬部門</label>
+                <select asp-for="DepartmentId" asp-items="@ViewBag.DepartmentList" class="form-select">
+                    <option value="">-- 請選擇 --</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="SupervisorId" class="form-label">直屬主管</label>
+                <select asp-for="SupervisorId" asp-items="@ViewBag.SupervisorList" class="form-select">
+                    <option value="">-- 請選擇 --</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="JobTitle" class="form-label">擔任職稱</label>
+                <input asp-for="JobTitle" class="form-control" />
+            </div>
+        </div>
+
+        <hr />
+        <h6 class="fw-bold text-primary mb-3">修改登入密碼</h6>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">新密碼</label>
+                <input type="password" name="newPassword" class="form-control" placeholder="不修改請留空" />
+                <div class="form-text">留空表示不修改密碼</div>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">確認新密碼</label>
+                <input type="password" id="confirmPwd" class="form-control" placeholder="請再次輸入新密碼" />
+            </div>
+        </div>
+
+        <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-primary" onclick="return validatePwd()">
+                <i class="bi bi-save me-1"></i>儲存資料
+            </button>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>返回
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+<script>
+    function previewPhoto(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('photoPreview').src = e.target.result;
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function validatePwd() {
+        var newPwd = document.querySelector('input[name="newPassword"]').value;
+        var confirmPwd = document.getElementById('confirmPwd').value;
+        if (newPwd && newPwd !== confirmPwd) {
+            alert('新密碼與確認密碼不一致，請重新輸入！');
+            return false;
+        }
+        return true;
+    }
+</script>
+}

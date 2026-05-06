@@ -1,0 +1,54 @@
+@using EnterprisePortal.Models
+@{
+    ViewData["Title"] = "角色指派";
+    var employee = ViewBag.Employee as Employee;
+    var allRoles = ViewBag.AllRoles as List<Role> ?? new();
+    var empRoleIds = ViewBag.EmpRoleIds as List<string> ?? new();
+}
+
+<div class="content-card" style="max-width:600px;">
+    <h4><i class="bi bi-shield-check me-2"></i>角色指派</h4>
+
+    <div class="d-flex align-items-center gap-3 mb-4 p-3 bg-light rounded">
+        <img src="@(string.IsNullOrEmpty(employee?.PhotoPath) ? "/img/default-avatar.svg" : employee?.PhotoPath)"
+             class="rounded-circle border" width="56" height="56" style="object-fit:cover;"
+             onerror="this.src='/img/default-avatar.svg'" />
+        <div>
+            <div class="fw-bold fs-5">@employee?.FullName</div>
+            <div class="text-muted small">@employee?.EmployeeId &nbsp;|&nbsp; @employee?.Department?.DepartmentName &nbsp;|&nbsp; @employee?.JobTitle</div>
+        </div>
+    </div>
+
+    <form asp-action="RoleAssign" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="employeeId" value="@employee?.EmployeeId" />
+
+        <label class="form-label fw-bold">指派角色</label>
+        <div class="card p-3">
+            @foreach (var role in allRoles)
+            {
+                var isChecked = empRoleIds.Contains(role.RoleId);
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" name="roleIds" value="@role.RoleId"
+                           id="role_@role.RoleId" @(isChecked ? "checked" : "") />
+                    <label class="form-check-label" for="role_@role.RoleId">
+                        <strong>@role.RoleName</strong>
+                        @if (!string.IsNullOrEmpty(role.Description))
+                        {
+                            <small class="text-muted ms-2">— @role.Description</small>
+                        }
+                    </label>
+                </div>
+            }
+        </div>
+
+        <div class="mt-3 d-flex gap-2">
+            <button type="submit" class="btn btn-warning">
+                <i class="bi bi-save me-1"></i>儲存角色
+            </button>
+            <a asp-action="EmployeeList" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>返回
+            </a>
+        </div>
+    </form>
+</div>

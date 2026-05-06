@@ -1,0 +1,85 @@
+@model EnterprisePortal.ViewModels.LoginViewModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "員工登入";
+}
+
+<div class="login-page">
+    <div class="login-card">
+        <div class="login-title">
+            &#9670; 企業入口網站
+            <span class="sub">Enterprise Portal System</span>
+        </div>
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="alert alert-danger py-2">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                @Html.ValidationSummary(false, "", new { @class = "mb-0" })
+            </div>
+        }
+
+        <form asp-action="Login" method="post">
+            @Html.AntiForgeryToken()
+
+            <div class="mb-3">
+                <label asp-for="EmployeeId" class="form-label"><i class="bi bi-person me-1"></i>員工編號</label>
+                <input asp-for="EmployeeId" class="form-control" placeholder="請輸入員工編號" autocomplete="username" autofocus />
+                <span asp-validation-for="EmployeeId" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Password" class="form-label"><i class="bi bi-lock me-1"></i>登入密碼</label>
+                <div class="input-group">
+                    <input asp-for="Password" class="form-control" placeholder="請輸入登入密碼" id="passwordInput" />
+                    <button class="btn btn-outline-secondary" type="button" onclick="togglePwd()">
+                        <i class="bi bi-eye" id="pwdIcon"></i>
+                    </button>
+                </div>
+                <span asp-validation-for="Password" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="CaptchaInput" class="form-label"><i class="bi bi-shield-check me-1"></i>驗證碼</label>
+                <div class="d-flex gap-2 align-items-center mb-2">
+                    <img src="/Account/CaptchaImage" id="captchaImg" class="captcha-img" title="點擊重新產生驗證碼"
+                         onclick="refreshCaptcha()" height="40" />
+                    <a href="javascript:void(0)" onclick="refreshCaptcha()" class="text-secondary small">
+                        <i class="bi bi-arrow-clockwise"></i> 換一張
+                    </a>
+                </div>
+                <input asp-for="CaptchaInput" class="form-control" placeholder="請輸入上方驗證碼" autocomplete="off" />
+                <span asp-validation-for="CaptchaInput" class="text-danger small"></span>
+            </div>
+
+            <div class="d-grid mt-4">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-box-arrow-in-right me-1"></i>登入
+                </button>
+            </div>
+        </form>
+
+        <div class="text-center mt-3 text-muted small">
+            &copy; @DateTime.Now.Year 企業入口網站系統
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function refreshCaptcha() {
+        document.getElementById('captchaImg').src = '/Account/CaptchaImage?' + Date.now();
+    }
+    function togglePwd() {
+        var inp = document.getElementById('passwordInput');
+        var icon = document.getElementById('pwdIcon');
+        if (inp.type === 'password') {
+            inp.type = 'text';
+            icon.className = 'bi bi-eye-slash';
+        } else {
+            inp.type = 'password';
+            icon.className = 'bi bi-eye';
+        }
+    }
+</script>
+}
