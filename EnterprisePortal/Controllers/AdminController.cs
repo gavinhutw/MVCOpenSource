@@ -221,7 +221,9 @@ namespace EnterprisePortal.Controllers
         [HttpGet]
         public async Task<IActionResult> RoleManage()
         {
-            var roles = await _db.Roles.ToListAsync();
+            var roles = await _db.Roles
+                .Include(r => r.EmployeeRoles)
+                .ToListAsync();
             return View(roles);
         }
 
