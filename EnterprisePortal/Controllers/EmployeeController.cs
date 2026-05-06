@@ -87,8 +87,8 @@ namespace EnterprisePortal.Controllers
             existing.Email = model.Email;
             existing.HireDate = model.HireDate;
             existing.EmploymentStatus = model.EmploymentStatus;
-            existing.DepartmentId = model.DepartmentId;
-            existing.SupervisorId = model.SupervisorId;
+            existing.DepartmentId = string.IsNullOrEmpty(model.DepartmentId) ? null : model.DepartmentId;
+            existing.SupervisorId = string.IsNullOrEmpty(model.SupervisorId) ? null : model.SupervisorId;
             existing.JobTitle = model.JobTitle;
 
             if (!string.IsNullOrWhiteSpace(newPassword))

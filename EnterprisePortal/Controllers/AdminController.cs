@@ -122,6 +122,9 @@ namespace EnterprisePortal.Controllers
             var existing = await _db.Employees.FindAsync(model.EmployeeId);
             if (existing == null) return NotFound();
 
+            // PasswordHash 由 newPassword 欄位另行處理，不參與 ModelState 驗證
+            ModelState.Remove("PasswordHash");
+
             if (!ModelState.IsValid)
             {
                 await LoadFormSelects(model);
@@ -143,8 +146,9 @@ namespace EnterprisePortal.Controllers
             existing.Email = model.Email;
             existing.HireDate = model.HireDate;
             existing.EmploymentStatus = model.EmploymentStatus;
-            existing.DepartmentId = model.DepartmentId;
-            existing.SupervisorId = model.SupervisorId;
+            // 下拉選單若選空值會送出空字串，FK 欄位需轉為 null
+            existing.DepartmentId = string.IsNullOrEmpty(model.DepartmentId) ? null : model.DepartmentId;
+            existing.SupervisorId = string.IsNullOrEmpty(model.SupervisorId) ? null : model.SupervisorId;
             existing.JobTitle = model.JobTitle;
 
             if (!string.IsNullOrWhiteSpace(newPassword))
