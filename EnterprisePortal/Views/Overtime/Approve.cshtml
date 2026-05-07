@@ -45,7 +45,7 @@
                                 var badgeClass = a.Status == ApprovalStatus.Approved ? "bg-success" :
                                                  a.Status == ApprovalStatus.Rejected ? "bg-danger" : "bg-secondary";
                                 <span class="badge @badgeClass">
-                                    @(a.ApprovalOrder == 0 ? "代理人" : $"第{a.ApprovalOrder}關") @a.Approver?.FullName
+                                    第@(a.ApprovalOrder + 1)關 @a.Approver?.FullName
                                 </span>
                             }
                         </div>
