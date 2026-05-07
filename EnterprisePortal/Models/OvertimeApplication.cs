@@ -25,10 +25,9 @@ namespace EnterprisePortal.Models
         [Display(Name = "加班原因")]
         public string Reason { get; set; } = string.Empty;
 
-        [Required]
         [StringLength(20)]
         [Display(Name = "代理人")]
-        public string ProxyId { get; set; } = string.Empty;
+        public string? ProxyId { get; set; }
 
         [Display(Name = "申請狀態")]
         public ApplicationStatus Status { get; set; } = ApplicationStatus.Pending;

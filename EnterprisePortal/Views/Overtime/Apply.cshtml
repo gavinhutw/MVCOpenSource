@@ -32,16 +32,6 @@
             </div>
         </div>
 
-        <div class="row g-3 mt-1">
-            <div class="col-md-6">
-                <label asp-for="ProxyId" class="form-label">代理人 <span class="text-danger">*</span></label>
-                <select asp-for="ProxyId" asp-items="Model.EmployeeList" class="form-select">
-                    <option value="">-- 請選擇代理人 --</option>
-                </select>
-                <span asp-validation-for="ProxyId" class="text-danger small"></span>
-            </div>
-        </div>
-
         <div class="mt-3">
             <label class="form-label fw-bold">簽核主管（依序簽核）<span class="text-danger"> *</span></label>
             <div id="approversContainer">

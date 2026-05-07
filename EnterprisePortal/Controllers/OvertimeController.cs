@@ -52,21 +52,13 @@ namespace EnterprisePortal.Controllers
                 StartDate = vm.StartDate,
                 EndDate = vm.EndDate,
                 Reason = vm.Reason,
-                ProxyId = vm.ProxyId,
+                ProxyId = null,
                 Status = ApplicationStatus.Pending,
                 AppliedAt = DateTime.Now
             };
 
             _db.OvertimeApplications.Add(application);
             await _db.SaveChangesAsync();
-
-            _db.OvertimeApprovers.Add(new OvertimeApprover
-            {
-                OvertimeApplicationId = application.Id,
-                ApproverId = vm.ProxyId,
-                ApprovalOrder = 0,
-                Status = ApprovalStatus.Pending
-            });
 
             for (int i = 0; i < vm.ApproverIds.Count; i++)
             {
@@ -76,7 +68,7 @@ namespace EnterprisePortal.Controllers
                     {
                         OvertimeApplicationId = application.Id,
                         ApproverId = vm.ApproverIds[i],
-                        ApprovalOrder = i + 1,
+                        ApprovalOrder = i,
                         Status = ApprovalStatus.Pending
                     });
                 }

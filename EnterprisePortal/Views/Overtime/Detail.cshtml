@@ -26,10 +26,6 @@
             <div><span class="badge @badgeClass fs-6">@Model.Status.GetDisplayName()</span></div>
         </div>
         <div class="col-md-4">
-            <label class="text-muted small">代理人</label>
-            <div>@Model.Proxy?.FullName (@Model.ProxyId)</div>
-        </div>
-        <div class="col-md-4">
             <label class="text-muted small">加班起始日期</label>
             <div class="fw-bold">@Model.StartDate.ToString("yyyy/MM/dd")</div>
         </div>
@@ -69,7 +65,7 @@
                     <tr class="@rowClass">
                         <td class="text-center">@(a.ApprovalOrder + 1)</td>
                         <td>@a.Approver?.FullName (@a.ApproverId)</td>
-                        <td>@(a.ApprovalOrder == 0 ? "代理人" : "簽核主管")</td>
+                        <td>簽核主管</td>
                         <td>
                             <span class="badge @(a.Status == ApprovalStatus.Approved ? "bg-success" : a.Status == ApprovalStatus.Rejected ? "bg-danger" : "bg-secondary")">
                                 @a.Status.GetDisplayName()

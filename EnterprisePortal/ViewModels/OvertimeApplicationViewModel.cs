@@ -23,10 +23,6 @@ namespace EnterprisePortal.ViewModels
         [Display(Name = "加班原因")]
         public string Reason { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "請選擇代理人")]
-        [Display(Name = "代理人")]
-        public string ProxyId { get; set; } = string.Empty;
-
         [Display(Name = "簽核主管 (依序)")]
         public List<string> ApproverIds { get; set; } = new List<string>();
 
