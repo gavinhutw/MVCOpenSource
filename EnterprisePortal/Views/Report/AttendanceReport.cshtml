@@ -100,8 +100,9 @@
                                 var workHours = row.ClockIn != null && row.ClockOut != null
                                     ? $"{((DateTime)row.ClockOut - (DateTime)row.ClockIn).TotalHours:F1} 小時"
                                     : "-";
+                                DateTime rowDate = (DateTime)row.Date;
                                 <tr>
-                                    <td>@((DateTime)row.Date).ToString("yyyy/MM/dd")</td>
+                                    <td>@rowDate.ToString("yyyy/MM/dd")</td>
                                     <td>@row.EmployeeName (@row.EmployeeId)</td>
                                     <td>@(row.ClockIn != null ? ((DateTime)row.ClockIn).ToString("HH:mm") : "-")</td>
                                     <td>@(row.ClockOut != null ? ((DateTime)row.ClockOut).ToString("HH:mm") : "-")</td>
