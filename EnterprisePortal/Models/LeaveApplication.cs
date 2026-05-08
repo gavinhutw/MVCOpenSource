@@ -20,9 +20,15 @@ namespace EnterprisePortal.Models
         [Display(Name = "請假起始日期")]
         public DateTime StartDate { get; set; }
 
+        [Display(Name = "起始時間（時）")]
+        public int? StartHour { get; set; }
+
         [Required]
         [Display(Name = "請假結束日期")]
         public DateTime EndDate { get; set; }
+
+        [Display(Name = "結束時間（時）")]
+        public int? EndHour { get; set; }
 
         [Required]
         [StringLength(500)]

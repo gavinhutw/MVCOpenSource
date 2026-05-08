@@ -16,11 +16,27 @@
                 <label asp-for="StartDate" class="form-label">加班起始日期 <span class="text-danger">*</span></label>
                 <input asp-for="StartDate" type="date" class="form-control" />
                 <span asp-validation-for="StartDate" class="text-danger small"></span>
+                <label asp-for="StartHour" class="form-label mt-2">起始時間</label>
+                <select asp-for="StartHour" class="form-select">
+                    <option value="">-- 請選擇 --</option>
+                    @for (int h = 0; h <= 23; h++)
+                    {
+                        <option value="@h">@h.ToString("D2"):00</option>
+                    }
+                </select>
             </div>
             <div class="col-md-6">
                 <label asp-for="EndDate" class="form-label">加班結束日期 <span class="text-danger">*</span></label>
                 <input asp-for="EndDate" type="date" class="form-control" />
                 <span asp-validation-for="EndDate" class="text-danger small"></span>
+                <label asp-for="EndHour" class="form-label mt-2">結束時間</label>
+                <select asp-for="EndHour" class="form-select">
+                    <option value="">-- 請選擇 --</option>
+                    @for (int h = 0; h <= 23; h++)
+                    {
+                        <option value="@h">@h.ToString("D2"):00</option>
+                    }
+                </select>
             </div>
         </div>
 

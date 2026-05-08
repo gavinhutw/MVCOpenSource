@@ -50,7 +50,9 @@ namespace EnterprisePortal.Controllers
             {
                 ApplicantId = CurrentEmployeeId,
                 StartDate = vm.StartDate,
+                StartHour = vm.StartHour,
                 EndDate = vm.EndDate,
+                EndHour = vm.EndHour,
                 Reason = vm.Reason,
                 ProxyId = null,
                 Status = ApplicationStatus.Pending,

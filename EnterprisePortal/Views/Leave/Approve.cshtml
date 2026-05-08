@@ -31,6 +31,26 @@
                         <div class="col-md-4">
                             <small class="text-muted d-block">請假期間</small>
                             <strong>@app.StartDate.ToString("yyyy/MM/dd") ~ @app.EndDate.ToString("yyyy/MM/dd")</strong>
+                            <div class="mt-1 small">
+                                <span class="text-muted">起始請假時間：</span>
+                                @if (app.StartHour.HasValue)
+                                {
+                                    <span class="text-primary fw-bold">@app.StartHour.Value.ToString("D2"):00</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">--:--</span>
+                                }
+                                <span class="ms-2 text-muted">結束請假時間：</span>
+                                @if (app.EndHour.HasValue)
+                                {
+                                    <span class="text-primary fw-bold">@app.EndHour.Value.ToString("D2"):00</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">--:--</span>
+                                }
+                            </div>
                         </div>
                         <div class="col-md-8">
                             <small class="text-muted d-block">請假原因</small>

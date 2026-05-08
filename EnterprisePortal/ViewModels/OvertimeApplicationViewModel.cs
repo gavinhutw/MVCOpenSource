@@ -13,10 +13,18 @@ namespace EnterprisePortal.ViewModels
         [DataType(DataType.Date)]
         public DateTime StartDate { get; set; } = DateTime.Today;
 
+        [Range(0, 23, ErrorMessage = "時間必須介於 0 到 23")]
+        [Display(Name = "起始時間（時）")]
+        public int? StartHour { get; set; }
+
         [Required(ErrorMessage = "請選擇結束日期")]
         [Display(Name = "加班結束日期")]
         [DataType(DataType.Date)]
         public DateTime EndDate { get; set; } = DateTime.Today;
+
+        [Range(0, 23, ErrorMessage = "時間必須介於 0 到 23")]
+        [Display(Name = "結束時間（時）")]
+        public int? EndHour { get; set; }
 
         [Required(ErrorMessage = "請輸入加班原因")]
         [StringLength(500)]

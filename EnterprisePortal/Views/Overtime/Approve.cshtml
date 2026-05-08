@@ -30,6 +30,26 @@
                         <div class="col-md-4">
                             <small class="text-muted d-block">加班期間</small>
                             <strong>@app.StartDate.ToString("yyyy/MM/dd") ~ @app.EndDate.ToString("yyyy/MM/dd")</strong>
+                            <div class="mt-1 small">
+                                <span class="text-muted">起始加班時間：</span>
+                                @if (app.StartHour.HasValue)
+                                {
+                                    <span class="fw-bold" style="color:#7c3aed;">@app.StartHour.Value.ToString("D2"):00</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">--:--</span>
+                                }
+                                <span class="ms-2 text-muted">結束加班時間：</span>
+                                @if (app.EndHour.HasValue)
+                                {
+                                    <span class="fw-bold" style="color:#7c3aed;">@app.EndHour.Value.ToString("D2"):00</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">--:--</span>
+                                }
+                            </div>
                         </div>
                         <div class="col-md-8">
                             <small class="text-muted d-block">加班原因</small>
