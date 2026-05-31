@@ -1,0 +1,92 @@
+@model List<Account>
+@{ ViewData["Title"] = "帳戶管理"; }
+
+<div class="pt-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0 fw-semibold"><i class="bi bi-bank me-2 text-primary"></i>帳戶管理</h5>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>新增帳戶
+        </a>
+    </div>
+
+    <div class="alert alert-info border-0 py-2 mb-3">
+        <i class="bi bi-wallet2 me-2"></i>
+        總資產：<strong>NT$ @ViewBag.TotalBalance.ToString("N0")</strong>
+    </div>
+
+    <div class="row g-3">
+        @foreach (var account in Model)
+        {
+            <div class="col-sm-6 col-lg-4">
+                <div class="card border-0 shadow-sm h-100"
+                     style="border-top: 4px solid @account.Color !important;">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                 style="width:44px;height:44px;background:@account.Color;">
+                                <i class="bi @(account.Type == AccountType.Bank ? "bi-bank" : account.Type == AccountType.CreditCard ? "bi-credit-card" : "bi-cash") text-white fs-5"></i>
+                            </div>
+                            <div>
+                                <div class="fw-semibold">@account.Name</div>
+                                <span class="badge rounded-pill border"
+                                      style="color:@account.Color;border-color:@account.Color !important;font-size:0.72em;">
+                                    @(account.Type == AccountType.Cash ? "現金" : account.Type == AccountType.Bank ? "銀行帳戶" : "信用卡")
+                                </span>
+                            </div>
+                        </div>
+                        <div class="text-end fs-4 fw-bold @(account.Balance >= 0 ? "" : "text-danger")">
+                            NT$ @account.Balance.ToString("N0")
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent border-0 d-flex justify-content-end gap-2 pb-3">
+                        <a asp-action="Edit" asp-route-id="@account.Id" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-pencil me-1"></i>編輯
+                        </a>
+                        <button class="btn btn-sm btn-outline-danger"
+                                onclick="confirmDelete(@account.Id, '@account.Name')">
+                            <i class="bi bi-trash me-1"></i>刪除
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+        @if (!Model.Any())
+        {
+            <div class="col-12 text-center py-5 text-muted">
+                <i class="bi bi-bank fs-1 d-block mb-2"></i>
+                <span>尚無帳戶，請先新增一個帳戶</span>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h6 class="modal-title">確認刪除帳戶</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                確定要刪除帳戶「<strong id="deleteAccountName"></strong>」嗎？
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">取消</button>
+                <form id="deleteForm" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger btn-sm">刪除</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+function confirmDelete(id, name) {
+    document.getElementById('deleteAccountName').textContent = name;
+    document.getElementById('deleteForm').action = '/Accounts/Delete/' + id;
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+</script>
+}

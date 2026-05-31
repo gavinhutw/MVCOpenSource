@@ -1,0 +1,105 @@
+@model TransactionFormViewModel
+@{ ViewData["Title"] = "編輯交易"; }
+
+<div class="pt-3">
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <a asp-action="Index" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <h5 class="mb-0 fw-semibold"><i class="bi bi-pencil-square me-2 text-primary"></i>編輯交易</h5>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
+
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <label asp-for="Type" class="form-label fw-semibold">類型</label>
+                                <select asp-for="Type" id="typeSelect" class="form-select"
+                                        onchange="filterCategories(this.value)">
+                                    <option value="Expense">支出</option>
+                                    <option value="Income">收入</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label asp-for="Date" class="form-label fw-semibold">日期</label>
+                                <input asp-for="Date" type="date" class="form-control" />
+                                <span asp-validation-for="Date" class="text-danger small"></span>
+                            </div>
+                            <div class="col-12">
+                                <label asp-for="Amount" class="form-label fw-semibold">金額 (NT$)</label>
+                                <input asp-for="Amount" type="number" step="1" min="1" class="form-control" />
+                                <span asp-validation-for="Amount" class="text-danger small"></span>
+                            </div>
+                            <div class="col-12">
+                                <label asp-for="AccountId" class="form-label fw-semibold">帳戶</label>
+                                <select asp-for="AccountId" class="form-select">
+                                    @foreach (var a in Model.Accounts)
+                                    {
+                                        <option value="@a.Id">@a.Name</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="AccountId" class="text-danger small"></span>
+                            </div>
+                            <div class="col-12">
+                                <label asp-for="CategoryId" class="form-label fw-semibold">分類</label>
+                                <select asp-for="CategoryId" id="categorySelect" class="form-select">
+                                    @foreach (var c in Model.Categories)
+                                    {
+                                        <option value="@c.Id" data-type="@c.Type">@c.Name</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="CategoryId" class="text-danger small"></span>
+                            </div>
+                            <div class="col-12">
+                                <label asp-for="Description" class="form-label fw-semibold">說明（選填）</label>
+                                <input asp-for="Description" class="form-control" />
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary flex-grow-1">
+                                <i class="bi bi-check-lg me-1"></i>確認更新
+                            </button>
+                            <a asp-action="Index" class="btn btn-outline-secondary">取消</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+const allCategories = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+    Model.Categories.Select(c => new { id = c.Id, name = c.Name, type = c.Type.ToString() })
+));
+const selectedCategoryId = @Model.CategoryId;
+
+function filterCategories(type, keepSelected) {
+    const sel = document.getElementById('categorySelect');
+    sel.innerHTML = '';
+    allCategories
+        .filter(c => c.type === type)
+        .forEach(c => {
+            const opt = new Option(c.name, c.id);
+            if (keepSelected && c.id === selectedCategoryId) opt.selected = true;
+            sel.add(opt);
+        });
+}
+
+// Init: filter and keep current selection
+filterCategories(document.getElementById('typeSelect').value, true);
+
+document.getElementById('typeSelect').addEventListener('change', function() {
+    filterCategories(this.value, false);
+});
+</script>
+}

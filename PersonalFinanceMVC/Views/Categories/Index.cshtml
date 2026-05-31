@@ -1,0 +1,138 @@
+@model List<Category>
+@{ ViewData["Title"] = "分類管理"; }
+
+<div class="pt-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0 fw-semibold"><i class="bi bi-tags me-2 text-primary"></i>分類管理</h5>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>新增分類
+        </a>
+    </div>
+
+    <div class="row g-3">
+        <!-- 支出分類 -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <h6 class="mb-0 fw-semibold">
+                        <span class="badge bg-danger me-2">支出</span>
+                        支出分類
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    @{
+                        var expense = Model.Where(c => c.Type == TransactionType.Expense).ToList();
+                    }
+                    @if (expense.Any())
+                    {
+                        <ul class="list-group list-group-flush">
+                            @foreach (var cat in expense)
+                            {
+                                <li class="list-group-item d-flex align-items-center justify-content-between py-2">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="rounded-circle d-inline-block"
+                                              style="width:12px;height:12px;background:@cat.Color;flex-shrink:0;"></span>
+                                        <span>@cat.Name</span>
+                                    </div>
+                                    <div class="d-flex gap-1">
+                                        <a asp-action="Edit" asp-route-id="@cat.Id"
+                                           class="btn btn-xs btn-outline-primary" style="padding:2px 8px;font-size:0.78em;">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button class="btn btn-xs btn-outline-danger"
+                                                style="padding:2px 8px;font-size:0.78em;"
+                                                onclick="confirmDelete(@cat.Id, '@cat.Name')">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center py-3">尚無支出分類</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- 收入分類 -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <h6 class="mb-0 fw-semibold">
+                        <span class="badge bg-success me-2">收入</span>
+                        收入分類
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    @{
+                        var income = Model.Where(c => c.Type == TransactionType.Income).ToList();
+                    }
+                    @if (income.Any())
+                    {
+                        <ul class="list-group list-group-flush">
+                            @foreach (var cat in income)
+                            {
+                                <li class="list-group-item d-flex align-items-center justify-content-between py-2">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="rounded-circle d-inline-block"
+                                              style="width:12px;height:12px;background:@cat.Color;flex-shrink:0;"></span>
+                                        <span>@cat.Name</span>
+                                    </div>
+                                    <div class="d-flex gap-1">
+                                        <a asp-action="Edit" asp-route-id="@cat.Id"
+                                           class="btn btn-xs btn-outline-primary" style="padding:2px 8px;font-size:0.78em;">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button class="btn btn-xs btn-outline-danger"
+                                                style="padding:2px 8px;font-size:0.78em;"
+                                                onclick="confirmDelete(@cat.Id, '@cat.Name')">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center py-3">尚無收入分類</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h6 class="modal-title">確認刪除分類</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                確定要刪除分類「<strong id="deleteCategoryName"></strong>」嗎？
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">取消</button>
+                <form id="deleteForm" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger btn-sm">刪除</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+function confirmDelete(id, name) {
+    document.getElementById('deleteCategoryName').textContent = name;
+    document.getElementById('deleteForm').action = '/Categories/Delete/' + id;
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+</script>
+}

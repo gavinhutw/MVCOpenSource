@@ -1,0 +1,55 @@
+@model Account
+@{ ViewData["Title"] = "編輯帳戶"; }
+
+<div class="pt-3">
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <a asp-action="Index" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+        <h5 class="mb-0 fw-semibold"><i class="bi bi-pencil-square me-2 text-primary"></i>編輯帳戶</h5>
+    </div>
+    <div class="row justify-content-center">
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" asp-for="Balance" />
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
+                        <div class="mb-3">
+                            <label asp-for="Name" class="form-label fw-semibold"></label>
+                            <input asp-for="Name" class="form-control" />
+                            <span asp-validation-for="Name" class="text-danger small"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Type" class="form-label fw-semibold"></label>
+                            <select asp-for="Type" class="form-select">
+                                <option value="Cash">現金</option>
+                                <option value="Bank">銀行帳戶</option>
+                                <option value="CreditCard">信用卡</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">目前餘額</label>
+                            <div class="form-control bg-light">NT$ @Model.Balance.ToString("N0")</div>
+                            <small class="text-muted">餘額由交易記錄自動計算，無法直接修改</small>
+                        </div>
+                        <div class="mb-4">
+                            <label asp-for="Color" class="form-label fw-semibold"></label>
+                            <div class="d-flex align-items-center gap-3">
+                                <input asp-for="Color" type="color" class="form-control form-control-color"
+                                       style="width:48px;height:38px;" />
+                                <small class="text-muted">選擇代表顏色</small>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary flex-grow-1">
+                                <i class="bi bi-check-lg me-1"></i>確認更新
+                            </button>
+                            <a asp-action="Index" class="btn btn-outline-secondary">取消</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
