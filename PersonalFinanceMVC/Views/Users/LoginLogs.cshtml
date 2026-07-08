@@ -1,0 +1,120 @@
+@model List<PersonalFinanceMVC.Models.LoginLog>
+@{ ViewData["Title"] = "登入記錄"; }
+
+<div class="pt-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0 fw-semibold">
+            <i class="bi bi-clock-history me-2 text-primary"></i>登入記錄
+        </h5>
+        <a asp-action="Index" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>返回使用者清單
+        </a>
+    </div>
+
+    <!-- 篩選 -->
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body py-3">
+            <form method="get" asp-action="LoginLogs" class="row g-2 align-items-end">
+                <div class="col-auto">
+                    <label class="form-label small text-muted mb-1">使用者</label>
+                    <select name="userId" class="form-select form-select-sm" style="min-width:160px;">
+                        <option value="">全部使用者</option>
+                        @foreach (var u in (List<PersonalFinanceMVC.Models.AppUser>)ViewBag.Users)
+                        {
+                            <option value="@u.Id" selected="@(ViewBag.FilterUserId != null && (int)ViewBag.FilterUserId == u.Id)">
+                                @u.Username (@u.DisplayName)
+                            </option>
+                        }
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="bi bi-search me-1"></i>篩選
+                    </button>
+                    <a asp-action="LoginLogs" class="btn btn-outline-secondary btn-sm ms-1">清除</a>
+                </div>
+                <div class="col-auto ms-auto">
+                    <small class="text-muted">顯示最近 100 筆記錄</small>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 統計 -->
+    <div class="row g-2 mb-3">
+        <div class="col-auto">
+            <div class="card border-0 bg-success bg-opacity-10 px-3 py-2">
+                <small class="text-muted">登入成功</small>
+                <div class="fw-bold text-success">@Model.Count(l => l.IsSuccess) 次</div>
+            </div>
+        </div>
+        <div class="col-auto">
+            <div class="card border-0 bg-danger bg-opacity-10 px-3 py-2">
+                <small class="text-muted">登入失敗</small>
+                <div class="fw-bold text-danger">@Model.Count(l => !l.IsSuccess) 次</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 記錄表 -->
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3">登入時間</th>
+                        <th>使用者代號</th>
+                        <th>來源 IP</th>
+                        <th>結果</th>
+                        <th class="pe-3">失敗原因</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Any())
+                    {
+                        @foreach (var log in Model)
+                        {
+                            <tr>
+                                <td class="ps-3">
+                                    <div class="fw-semibold small">@log.LoginAt.ToString("yyyy/MM/dd")</div>
+                                    <div class="text-muted small">@log.LoginAt.ToString("HH:mm:ss")</div>
+                                </td>
+                                <td>
+                                    <div>@log.Username</div>
+                                    @if (log.User is not null)
+                                    {
+                                        <small class="text-muted">@log.User.DisplayName</small>
+                                    }
+                                </td>
+                                <td class="font-monospace small">@log.IpAddress</td>
+                                <td>
+                                    @if (log.IsSuccess)
+                                    {
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                            <i class="bi bi-check-circle me-1"></i>成功
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                                            <i class="bi bi-x-circle me-1"></i>失敗
+                                        </span>
+                                    }
+                                </td>
+                                <td class="pe-3 text-muted small">@(log.FailReason ?? "—")</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-3 d-block mb-2"></i>尚無登入記錄
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

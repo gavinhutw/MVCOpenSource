@@ -1,4 +1,5 @@
 using PersonalFinanceMVC.Models;
+using PersonalFinanceMVC.Services;
 
 namespace PersonalFinanceMVC.Data;
 
@@ -6,6 +7,24 @@ public static class DbSeeder
 {
     public static void Seed(AppDbContext db)
     {
+        // 建立預設管理員帳號
+        if (!db.AppUsers.Any())
+        {
+            var authService = new AuthService();
+            db.AppUsers.Add(new AppUser
+            {
+                Username = "admin",
+                PasswordHash = authService.HashPassword("Admin@123"),
+                DisplayName = "系統管理員",
+                Email = "admin@localhost",
+                IsAdmin = true,
+                IsActive = true,
+                PasswordChangedAt = DateTime.Now,
+                CreatedAt = DateTime.Now
+            });
+            db.SaveChanges();
+        }
+
         if (db.Accounts.Any()) return;
 
         db.Accounts.AddRange(

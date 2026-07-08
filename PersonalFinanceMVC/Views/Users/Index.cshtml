@@ -1,0 +1,111 @@
+@model List<PersonalFinanceMVC.Models.AppUser>
+@using PersonalFinanceMVC.Services
+@{
+    ViewData["Title"] = "使用者管理";
+    var authService = new AuthService();
+}
+
+<div class="pt-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0 fw-semibold">
+            <i class="bi bi-people me-2 text-primary"></i>使用者管理
+        </h5>
+        <div class="d-flex gap-2">
+            <a asp-action="LoginLogs" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-clock-history me-1"></i>登入記錄
+            </a>
+            <a asp-action="Create" class="btn btn-primary btn-sm">
+                <i class="bi bi-person-plus me-1"></i>新增使用者
+            </a>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3">使用者代號</th>
+                        <th>顯示名稱</th>
+                        <th>電子郵件</th>
+                        <th>角色</th>
+                        <th>狀態</th>
+                        <th>密碼天數</th>
+                        <th>最後登入</th>
+                        <th class="text-center pe-3">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var u in Model)
+                    {
+                        var ageDays = (int)(DateTime.Now - u.PasswordChangedAt).TotalDays;
+                        var pwdStatus = ageDays > 90 ? "danger" : ageDays > 75 ? "warning" : "success";
+                        <tr>
+                            <td class="ps-3 fw-semibold">@u.Username</td>
+                            <td>@u.DisplayName</td>
+                            <td class="text-muted small">@(u.Email ?? "—")</td>
+                            <td>
+                                @if (u.IsAdmin)
+                                {
+                                    <span class="badge bg-danger">管理員</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">一般使用者</span>
+                                }
+                            </td>
+                            <td>
+                                @if (u.IsActive)
+                                {
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                        <i class="bi bi-check-circle me-1"></i>啟用
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                                        <i class="bi bi-x-circle me-1"></i>停用
+                                    </span>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge bg-@pwdStatus-subtle text-@pwdStatus">
+                                    @ageDays 天
+                                </span>
+                                @if (ageDays > 90)
+                                {
+                                    <small class="text-danger ms-1">已到期</small>
+                                }
+                            </td>
+                            <td class="text-muted small">
+                                @(u.LastLoginAt?.ToString("yyyy/MM/dd HH:mm") ?? "從未登入")
+                            </td>
+                            <td class="text-center pe-3">
+                                <a asp-action="Edit" asp-route-id="@u.Id"
+                                   class="btn btn-sm btn-outline-primary me-1">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a asp-action="LoginLogs" asp-route-userId="@u.Id"
+                                   class="btn btn-sm btn-outline-secondary me-1" title="登入記錄">
+                                    <i class="bi bi-clock-history"></i>
+                                </a>
+                                @if (u.Username != User.Identity!.Name)
+                                {
+                                    <form asp-action="ToggleActive" asp-route-id="@u.Id"
+                                          method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit"
+                                                class="btn btn-sm @(u.IsActive ? "btn-outline-warning" : "btn-outline-success")"
+                                                title="@(u.IsActive ? "停用帳號" : "啟用帳號")">
+                                            <i class="bi @(u.IsActive ? "bi-person-x" : "bi-person-check")"></i>
+                                        </button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

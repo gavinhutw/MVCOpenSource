@@ -1,0 +1,107 @@
+@model LoginViewModel
+@{
+    Layout = "_AuthLayout";
+    ViewData["Title"] = "登入";
+}
+
+<div class="auth-card card border-0 bg-white p-4 p-md-5">
+    <!-- Brand -->
+    <div class="text-center mb-4">
+        <div class="brand-icon mx-auto mb-3">
+            <i class="bi bi-wallet2 text-white fs-3"></i>
+        </div>
+        <h4 class="fw-bold mb-1">個人記帳系統</h4>
+        <p class="text-muted small mb-0">請登入以繼續使用</p>
+    </div>
+
+    <!-- Error summary -->
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-danger py-2 mb-3">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <div>@error.ErrorMessage</div>
+            }
+        </div>
+    }
+
+    <form asp-action="Login" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="ReturnUrl" />
+
+        <!-- 使用者代號 -->
+        <div class="mb-3">
+            <label asp-for="Username" class="form-label fw-semibold small">
+                <i class="bi bi-person me-1"></i>使用者代號
+            </label>
+            <input asp-for="Username" class="form-control" placeholder="輸入使用者代號"
+                   autocomplete="username" autofocus />
+        </div>
+
+        <!-- 密碼 -->
+        <div class="mb-3">
+            <label asp-for="Password" class="form-label fw-semibold small">
+                <i class="bi bi-lock me-1"></i>密碼
+            </label>
+            <div class="input-group">
+                <input asp-for="Password" type="password" class="form-control"
+                       placeholder="輸入密碼" autocomplete="current-password" id="passwordInput" />
+                <button type="button" class="btn btn-outline-secondary"
+                        onclick="togglePassword()" tabindex="-1">
+                    <i class="bi bi-eye" id="eyeIcon"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- 驗證碼 -->
+        <div class="mb-4">
+            <label asp-for="CaptchaInput" class="form-label fw-semibold small">
+                <i class="bi bi-shield-check me-1"></i>驗證碼
+            </label>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <img id="captchaImg"
+                     src="/Captcha/Image"
+                     alt="驗證碼"
+                     style="height:44px; border-radius:6px; cursor:pointer; border:1px solid #dee2e6;"
+                     onclick="refreshCaptcha()"
+                     title="點擊重新產生" />
+                <button type="button" class="btn btn-sm btn-outline-secondary"
+                        onclick="refreshCaptcha()">
+                    <i class="bi bi-arrow-clockwise"></i> 重新產生
+                </button>
+            </div>
+            <input asp-for="CaptchaInput" class="form-control" placeholder="輸入上方驗證碼（不區分大小寫）"
+                   autocomplete="off" />
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+            <i class="bi bi-box-arrow-in-right me-2"></i>登入
+        </button>
+    </form>
+
+    <p class="text-center text-muted small mt-4 mb-0">
+        個人記帳系統 &copy; @DateTime.Now.Year
+    </p>
+</div>
+
+@section Scripts {
+<script>
+function refreshCaptcha() {
+    document.getElementById('captchaImg').src = '/Captcha/Image?' + Date.now();
+    document.getElementById('CaptchaInput').value = '';
+    document.getElementById('CaptchaInput').focus();
+}
+function togglePassword() {
+    const inp = document.getElementById('passwordInput');
+    const ico = document.getElementById('eyeIcon');
+    if (inp.type === 'password') {
+        inp.type = 'text';
+        ico.className = 'bi bi-eye-slash';
+    } else {
+        inp.type = 'password';
+        ico.className = 'bi bi-eye';
+    }
+}
+</script>
+}

@@ -1,0 +1,165 @@
+@model LargeExpenseViewModel
+@{ ViewData["Title"] = "大額支出查詢"; }
+
+<div class="pt-3">
+    <h5 class="mb-3 fw-semibold">
+        <i class="bi bi-funnel me-2 text-primary"></i>大額支出查詢
+    </h5>
+
+    <!-- ── 查詢條件 ───────────────────────────────────────── -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body py-3">
+            <form method="post" asp-action="LargeExpense" class="row g-3 align-items-end">
+                @Html.AntiForgeryToken()
+
+                <div class="col-sm-auto">
+                    <label class="form-label small text-muted mb-1">最低金額（NT$）</label>
+                    <div class="input-group input-group-sm" style="width:160px;">
+                        <span class="input-group-text">NT$</span>
+                        <input type="number" name="minAmount" class="form-control"
+                               value="@Model.MinAmount" min="1" step="1"
+                               placeholder="例：1000" />
+                    </div>
+                </div>
+
+                <div class="col-sm-auto">
+                    <label class="form-label small text-muted mb-1">起始月份</label>
+                    <input type="month" name="startMonth" class="form-control form-control-sm"
+                           value="@Model.StartMonth" style="width:150px;" />
+                </div>
+
+                <div class="col-sm-auto">
+                    <label class="form-label small text-muted mb-1">結束月份</label>
+                    <input type="month" name="endMonth" class="form-control form-control-sm"
+                           value="@Model.EndMonth" style="width:150px;" />
+                </div>
+
+                <div class="col-sm-auto">
+                    <button type="submit" class="btn btn-primary btn-sm px-3">
+                        <i class="bi bi-search me-1"></i>查詢
+                    </button>
+                </div>
+
+                @if (Model.HasSearched)
+                {
+                    <div class="col-auto ms-auto d-flex gap-4 align-items-center">
+                        <div class="text-center">
+                            <div class="small text-muted">符合筆數</div>
+                            <div class="fw-bold text-primary">@Model.TotalCount 筆</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="small text-muted">合計金額</div>
+                            <div class="fw-bold text-danger">NT$ @Model.GrandTotal.ToString("N0")</div>
+                        </div>
+                    </div>
+                }
+            </form>
+        </div>
+    </div>
+
+    <!-- ── 查詢結果 ───────────────────────────────────────── -->
+    @if (!Model.HasSearched)
+    {
+        <div class="card border-0 shadow-sm">
+            <div class="card-body d-flex flex-column align-items-center justify-content-center py-5 text-muted">
+                <i class="bi bi-funnel fs-1 mb-3 text-secondary"></i>
+                <p class="mb-0">請輸入查詢條件後按下「查詢」</p>
+            </div>
+        </div>
+    }
+    else if (!Model.Groups.Any())
+    {
+        <div class="card border-0 shadow-sm">
+            <div class="card-body d-flex flex-column align-items-center justify-content-center py-5 text-muted">
+                <i class="bi bi-inbox fs-1 mb-3 text-secondary"></i>
+                <p class="mb-0">查無符合條件的支出記錄</p>
+                <small class="mt-1">最低金額：NT$ @Model.MinAmount.ToString("N0")，
+                    期間：@Model.StartMonth ～ @Model.EndMonth</small>
+            </div>
+        </div>
+    }
+    else
+    {
+        @foreach (var group in Model.Groups)
+        {
+            <div class="card border-0 shadow-sm mb-3">
+                <!-- 月份標題列 -->
+                <div class="card-header border-0 d-flex align-items-center justify-content-between py-2"
+                     style="background:#f1f5f9;">
+                    <span class="fw-semibold text-primary">
+                        <i class="bi bi-calendar3 me-2"></i>@group.MonthLabel 月
+                    </span>
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="small text-muted">@group.Items.Count 筆</span>
+                        <span class="fw-bold text-danger">
+                            NT$ @group.MonthTotal.ToString("N0")
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 明細表格 -->
+                <div class="card-body p-0">
+                    <table class="table table-hover table-sm mb-0 align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width:100px;" class="ps-3">日期</th>
+                                <th style="width:130px;">分類</th>
+                                <th>說明</th>
+                                <th style="width:130px;">帳戶</th>
+                                <th style="width:130px;" class="text-end pe-3">金額</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in group.Items)
+                            {
+                                <tr>
+                                    <td class="ps-3 text-muted small">@row.Date.ToString("MM/dd")</td>
+                                    <td>
+                                        <span class="badge rounded-pill"
+                                              style="background:@row.CategoryColor;font-size:0.75em;">
+                                            @row.CategoryName
+                                        </span>
+                                    </td>
+                                    <td class="small">
+                                        @if (!string.IsNullOrEmpty(row.Description))
+                                        {
+                                            @row.Description
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">—</span>
+                                        }
+                                    </td>
+                                    <td class="small text-muted">@row.AccountName</td>
+                                    <td class="text-end pe-3 fw-semibold text-danger">
+                                        NT$ @row.Amount.ToString("N0")
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-light fw-semibold">
+                                <td colspan="4" class="ps-3 text-end small text-muted">
+                                    @group.MonthLabel 小計
+                                </td>
+                                <td class="text-end pe-3 text-danger">
+                                    NT$ @group.MonthTotal.ToString("N0")
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        }
+
+        <!-- 總計列 -->
+        <div class="card border-0 shadow-sm border-danger" style="border-left:4px solid #dc3545!important;">
+            <div class="card-body py-2 d-flex justify-content-between align-items-center">
+                <span class="fw-semibold">
+                    <i class="bi bi-calculator me-2 text-danger"></i>總計（@Model.Groups.Count 個月 / @Model.TotalCount 筆）
+                </span>
+                <span class="fs-5 fw-bold text-danger">NT$ @Model.GrandTotal.ToString("N0")</span>
+            </div>
+        </div>
+    }
+</div>
