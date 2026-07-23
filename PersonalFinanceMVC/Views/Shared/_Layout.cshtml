@@ -84,6 +84,12 @@
                     <i class="bi bi-funnel me-2"></i>大額支出查詢
                 </a>
             </li>
+            <li class="nav-item">
+                <a asp-controller="Reports" asp-action="ReverseExpense"
+                   class="nav-link text-white @(ctrl == "Reports" && ViewContext.RouteData.Values["action"]?.ToString() == "ReverseExpense" ? "active" : "")">
+                    <i class="bi bi-funnel-fill me-2"></i>依支出分類反向查詢
+                </a>
+            </li>
             @if (isAdmin)
             {
                 <li class="mt-2">

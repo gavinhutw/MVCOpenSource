@@ -41,6 +41,50 @@ public class ReportService
         return reports;
     }
 
+    public async Task<List<LargeExpenseMonthGroup>> GetReverseExpensesAsync(
+        int categoryId, List<string> excludeKeywords)
+    {
+        // 先依分類+支出取出全部資料，再於記憶體做反向關鍵字過濾
+        var rows = await _db.Transactions
+            .Where(t => t.Type == TransactionType.Expense && t.CategoryId == categoryId)
+            .Include(t => t.Category)
+            .Include(t => t.Account)
+            .OrderBy(t => t.Date)
+            .ThenByDescending(t => t.Amount)
+            .Select(t => new LargeExpenseRow
+            {
+                Id            = t.Id,
+                Date          = t.Date,
+                Description   = t.Description,
+                CategoryName  = t.Category.Name,
+                CategoryColor = t.Category.Color,
+                AccountName   = t.Account.Name,
+                Amount        = t.Amount
+            })
+            .ToListAsync();
+
+        // 反向過濾：說明中不含任何關鍵字的記錄才算符合
+        if (excludeKeywords.Count > 0)
+        {
+            rows = rows
+                .Where(r => !excludeKeywords.Any(k =>
+                    r.Description.Contains(k, StringComparison.OrdinalIgnoreCase)))
+                .ToList();
+        }
+
+        return rows
+            .GroupBy(r => new { r.Date.Year, r.Date.Month })
+            .OrderBy(g => g.Key.Year).ThenBy(g => g.Key.Month)
+            .Select(g => new LargeExpenseMonthGroup
+            {
+                Year       = g.Key.Year,
+                Month      = g.Key.Month,
+                MonthTotal = g.Sum(r => r.Amount),
+                Items      = g.ToList()
+            })
+            .ToList();
+    }
+
     public async Task<List<LargeExpenseMonthGroup>> GetLargeExpensesAsync(
         decimal minAmount, int startYear, int startMonth, int endYear, int endMonth)
     {

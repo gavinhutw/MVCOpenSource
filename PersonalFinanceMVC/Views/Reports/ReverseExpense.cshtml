@@ -1,0 +1,227 @@
+@model ReverseExpenseViewModel
+@{ ViewData["Title"] = "依支出分類反向查詢"; }
+
+<div class="pt-3">
+    <h5 class="mb-3 fw-semibold">
+        <i class="bi bi-funnel-fill me-2 text-primary"></i>依支出分類反向查詢
+    </h5>
+    <p class="text-muted small mb-3">
+        選擇分類後，輸入要<strong>排除</strong>的關鍵字（說明欄位中<strong>不含</strong>任何關鍵字的記錄才會顯示）。
+        關鍵字欄位可留空不填。
+    </p>
+
+    <!-- ── 查詢條件 ───────────────────────────────────────── -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body py-3">
+            <form method="post" asp-action="ReverseExpense">
+                @Html.AntiForgeryToken()
+                <div class="row g-3 align-items-end">
+
+                    <!-- 分類下拉 -->
+                    <div class="col-sm-auto">
+                        <label class="form-label small text-muted mb-1">分類 <span class="text-danger">*</span></label>
+                        <select name="categoryId" class="form-select form-select-sm" style="width:160px;" required>
+                            <option value="">-- 請選擇 --</option>
+                            @foreach (var cat in Model.Categories)
+                            {
+                                <option value="@cat.Id"
+                                        selected="@(Model.CategoryId == cat.Id)"
+                                        style="border-left:3px solid @cat.Color;">
+                                    @cat.Name
+                                </option>
+                            }
+                        </select>
+                    </div>
+
+                    <!-- 五個關鍵字欄位 -->
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        var fieldName  = $"keyword{i}";
+                        var fieldValue = i switch {
+                            1 => Model.Keyword1,
+                            2 => Model.Keyword2,
+                            3 => Model.Keyword3,
+                            4 => Model.Keyword4,
+                            _ => Model.Keyword5
+                        };
+                        <div class="col-sm-auto">
+                            <label class="form-label small text-muted mb-1">排除關鍵字 @i</label>
+                            <input type="text" name="@fieldName" class="form-control form-control-sm"
+                                   value="@fieldValue" maxlength="50" placeholder="留空則不限"
+                                   style="width:130px;" />
+                        </div>
+                    }
+
+                    <!-- 查詢按鈕 -->
+                    <div class="col-sm-auto">
+                        <button type="submit" class="btn btn-primary btn-sm px-3">
+                            <i class="bi bi-search me-1"></i>查詢
+                        </button>
+                    </div>
+
+                    <!-- 結果摘要 -->
+                    @if (Model.HasSearched && Model.CategoryId > 0)
+                    {
+                        <div class="col-auto ms-auto d-flex gap-4 align-items-center">
+                            <div class="text-center">
+                                <div class="small text-muted">符合筆數</div>
+                                <div class="fw-bold text-primary">@Model.TotalCount 筆</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="small text-muted">合計金額</div>
+                                <div class="fw-bold text-danger">NT$ @Model.GrandTotal.ToString("N0")</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- 已啟用的排除關鍵字提示 -->
+                @if (Model.HasSearched && Model.ActiveKeywords.Any())
+                {
+                    <div class="mt-2 d-flex align-items-center gap-2 flex-wrap">
+                        <small class="text-muted">已排除說明含有：</small>
+                        @foreach (var kw in Model.ActiveKeywords)
+                        {
+                            <span class="badge bg-warning text-dark">
+                                <i class="bi bi-x-circle me-1"></i>@kw
+                            </span>
+                        }
+                    </div>
+                }
+            </form>
+        </div>
+    </div>
+
+    <!-- ── 查詢結果 ───────────────────────────────────────── -->
+    @if (!Model.HasSearched)
+    {
+        <div class="card border-0 shadow-sm">
+            <div class="card-body d-flex flex-column align-items-center justify-content-center py-5 text-muted">
+                <i class="bi bi-funnel-fill fs-1 mb-3 text-secondary"></i>
+                <p class="mb-0">請選擇分類並按下「查詢」</p>
+            </div>
+        </div>
+    }
+    else if (Model.CategoryId <= 0)
+    {
+        <div class="card border-0 shadow-sm">
+            <div class="card-body d-flex flex-column align-items-center justify-content-center py-5 text-muted">
+                <i class="bi bi-exclamation-circle fs-1 mb-3 text-warning"></i>
+                <p class="mb-0">請選擇一個支出分類</p>
+            </div>
+        </div>
+    }
+    else if (!Model.Groups.Any())
+    {
+        var selectedCat = Model.Categories.FirstOrDefault(c => c.Id == Model.CategoryId);
+        <div class="card border-0 shadow-sm">
+            <div class="card-body d-flex flex-column align-items-center justify-content-center py-5 text-muted">
+                <i class="bi bi-inbox fs-1 mb-3 text-secondary"></i>
+                <p class="mb-0">查無符合條件的支出記錄</p>
+                @if (selectedCat is not null)
+                {
+                    <small class="mt-1">
+                        分類：<span class="badge rounded-pill" style="background:@selectedCat.Color;">@selectedCat.Name</span>
+                        @if (Model.ActiveKeywords.Any())
+                        {
+                            <span class="ms-1">，已排除含「@string.Join("、", Model.ActiveKeywords)」的記錄</span>
+                        }
+                    </small>
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        var selectedCat = Model.Categories.FirstOrDefault(c => c.Id == Model.CategoryId);
+
+        @foreach (var group in Model.Groups)
+        {
+            <div class="card border-0 shadow-sm mb-3">
+                <!-- 月份標題列 -->
+                <div class="card-header border-0 d-flex align-items-center justify-content-between py-2"
+                     style="background:#f1f5f9;">
+                    <span class="fw-semibold text-primary">
+                        <i class="bi bi-calendar3 me-2"></i>@group.MonthLabel 月
+                    </span>
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="small text-muted">@group.Items.Count 筆</span>
+                        <span class="fw-bold text-danger">
+                            NT$ @group.MonthTotal.ToString("N0")
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 明細表格 -->
+                <div class="card-body p-0">
+                    <table class="table table-hover table-sm mb-0 align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width:100px;" class="ps-3">日期</th>
+                                <th style="width:130px;">分類</th>
+                                <th>說明</th>
+                                <th style="width:130px;">帳戶</th>
+                                <th style="width:130px;" class="text-end pe-3">金額</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in group.Items)
+                            {
+                                <tr>
+                                    <td class="ps-3 text-muted small">@row.Date.ToString("MM/dd")</td>
+                                    <td>
+                                        <span class="badge rounded-pill"
+                                              style="background:@row.CategoryColor;font-size:0.75em;">
+                                            @row.CategoryName
+                                        </span>
+                                    </td>
+                                    <td class="small">
+                                        @if (!string.IsNullOrEmpty(row.Description))
+                                        {
+                                            @row.Description
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">—</span>
+                                        }
+                                    </td>
+                                    <td class="small text-muted">@row.AccountName</td>
+                                    <td class="text-end pe-3 fw-semibold text-danger">
+                                        NT$ @row.Amount.ToString("N0")
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-light fw-semibold">
+                                <td colspan="4" class="ps-3 text-end small text-muted">
+                                    @group.MonthLabel 小計
+                                </td>
+                                <td class="text-end pe-3 text-danger">
+                                    NT$ @group.MonthTotal.ToString("N0")
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        }
+
+        <!-- 總計列 -->
+        <div class="card border-0 shadow-sm" style="border-left:4px solid #dc3545!important;">
+            <div class="card-body py-2 d-flex justify-content-between align-items-center">
+                <span class="fw-semibold">
+                    <i class="bi bi-calculator me-2 text-danger"></i>
+                    總計（@Model.Groups.Count 個月 / @Model.TotalCount 筆）
+                    @if (selectedCat is not null)
+                    {
+                        <span class="ms-2 badge rounded-pill" style="background:@selectedCat.Color;">
+                            @selectedCat.Name
+                        </span>
+                    }
+                </span>
+                <span class="fs-5 fw-bold text-danger">NT$ @Model.GrandTotal.ToString("N0")</span>
+            </div>
+        </div>
+    }
+</div>
