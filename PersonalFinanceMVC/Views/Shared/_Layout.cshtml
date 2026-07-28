@@ -107,6 +107,12 @@
                         <i class="bi bi-clock-history me-2"></i>登入記錄
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a asp-controller="AdvancePayment" asp-action="Index"
+                       class="nav-link text-white @(ctrl == "AdvancePayment" ? "active" : "")">
+                        <i class="bi bi-calendar-check me-2"></i>預支項目資料維護
+                    </a>
+                </li>
             }
         </ul>
 

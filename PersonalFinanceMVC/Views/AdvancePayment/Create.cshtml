@@ -1,0 +1,79 @@
+@model AdvancePaymentFormViewModel
+@{ ViewData["Title"] = "新增預支項目"; }
+
+<div class="pt-3">
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <a asp-action="Index" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <h5 class="mb-0 fw-semibold">
+            <i class="bi bi-plus-circle me-2 text-primary"></i>新增預支項目
+        </h5>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <form asp-action="Create" method="post">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 mb-3"></div>
+
+                        <!-- 分類名稱 -->
+                        <div class="mb-3">
+                            <label asp-for="Categories_Id" class="form-label fw-semibold"></label>
+                            <select asp-for="Categories_Id" class="form-select" required>
+                                <option value="">-- 請選擇分類 --</option>
+                                @foreach (var cat in Model.Categories)
+                                {
+                                    <option value="@cat.Id">
+                                        @cat.Name（@(cat.Type == TransactionType.Expense ? "支出" : "收入")）
+                                    </option>
+                                }
+                            </select>
+                            <span asp-validation-for="Categories_Id" class="text-danger small"></span>
+                        </div>
+
+                        <!-- 預支項目說明 -->
+                        <div class="mb-3">
+                            <label asp-for="Name" class="form-label fw-semibold"></label>
+                            <input asp-for="Name" class="form-control" maxlength="100"
+                                   placeholder="請輸入預支項目說明（最多 100 字）" />
+                            <span asp-validation-for="Name" class="text-danger small"></span>
+                        </div>
+
+                        <!-- 計費月份個數 -->
+                        <div class="mb-3">
+                            <label asp-for="MonthCount" class="form-label fw-semibold"></label>
+                            <select asp-for="MonthCount" class="form-select">
+                                @for (int m = 1; m <= 12; m++)
+                                {
+                                    <option value="@m" selected="@(Model.MonthCount == m)">@m 個月</option>
+                                }
+                            </select>
+                            <span asp-validation-for="MonthCount" class="text-danger small"></span>
+                        </div>
+
+                        <!-- 預支金額 -->
+                        <div class="mb-4">
+                            <label asp-for="Amount" class="form-label fw-semibold"></label>
+                            <div class="input-group">
+                                <span class="input-group-text">NT$</span>
+                                <input asp-for="Amount" type="number" class="form-control"
+                                       min="0" step="1" placeholder="0" />
+                            </div>
+                            <span asp-validation-for="Amount" class="text-danger small"></span>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary flex-grow-1">
+                                <i class="bi bi-check-lg me-1"></i>確認新增
+                            </button>
+                            <a asp-action="Index" class="btn btn-outline-secondary">取消</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

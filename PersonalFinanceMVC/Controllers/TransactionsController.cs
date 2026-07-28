@@ -10,12 +10,15 @@ public class TransactionsController : Controller
     private readonly TransactionService _transactionService;
     private readonly AccountService _accountService;
     private readonly CategoryService _categoryService;
+    private readonly AdvancePaymentService _advancePaymentService;
 
-    public TransactionsController(TransactionService transactionService, AccountService accountService, CategoryService categoryService)
+    public TransactionsController(TransactionService transactionService, AccountService accountService,
+        CategoryService categoryService, AdvancePaymentService advancePaymentService)
     {
         _transactionService = transactionService;
         _accountService = accountService;
         _categoryService = categoryService;
+        _advancePaymentService = advancePaymentService;
     }
 
     public async Task<IActionResult> Index(DateTime? startDate, DateTime? endDate, int? accountId, int? categoryId, TransactionType? type)
@@ -133,5 +136,41 @@ public class TransactionsController : Controller
         await _transactionService.DeleteAsync(id);
         TempData["Success"] = "交易已刪除";
         return RedirectToAction(nameof(Index));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetCategoryInfo(int categoryId)
+    {
+        var category = await _categoryService.GetByIdAsync(categoryId);
+        if (category is null) return Json(new { ok = false });
+
+        var now = DateTime.Now;
+        var daysInMonth = DateTime.DaysInMonth(now.Year, now.Month);
+        var ratio = (double)now.Day / daysInMonth;
+
+        var advances = await _advancePaymentService.GetByCategoryAsync(categoryId);
+        var totalAdvance = advances.Sum(a => a.Amount);
+        var remainingBudget = category.Budget - totalAdvance;
+        var availableBudget = Math.Round(remainingBudget * ratio, 0);
+
+        var monthlyExpense = await _transactionService
+            .GetMonthlyExpenseByCategoryAsync(now.Year, now.Month, categoryId);
+
+        var remaining = availableBudget - (double)monthlyExpense;
+
+        return Json(new
+        {
+            ok             = true,
+            budget         = category.Budget,
+            advances       = advances.Select(a => new { a.SerialNo, a.Name, a.Amount, a.MonthCount }),
+            totalAdvance,
+            remainingBudget,
+            daysInMonth,
+            today          = now.Day,
+            ratio          = Math.Round(ratio, 4),
+            availableBudget,
+            monthlyExpense,
+            remaining      = Math.Round(remaining, 0)
+        });
     }
 }

@@ -12,6 +12,7 @@ public class AppDbContext : DbContext
     public DbSet<Transaction> Transactions => Set<Transaction>();
     public DbSet<AppUser> AppUsers => Set<AppUser>();
     public DbSet<LoginLog> LoginLogs => Set<LoginLog>();
+    public DbSet<AdvancePayment> AdvancePayments => Set<AdvancePayment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -32,5 +33,15 @@ public class AppDbContext : DbContext
             .WithMany(u => u.LoginLogs)
             .HasForeignKey(l => l.UserId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<AdvancePayment>()
+            .HasKey(a => a.SerialNo);
+
+        modelBuilder.Entity<AdvancePayment>()
+            .HasOne(a => a.Category)
+            .WithMany()
+            .HasForeignKey(a => a.Categories_Id)
+            .HasConstraintName("FK_AdvancePayment_Categories")
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

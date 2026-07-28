@@ -50,6 +50,7 @@ builder.Services.AddScoped<TransactionService>();
 builder.Services.AddScoped<ReportService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<AdvancePaymentService>();
 
 var app = builder.Build();
 

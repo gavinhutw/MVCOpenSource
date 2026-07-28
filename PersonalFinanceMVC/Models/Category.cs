@@ -17,5 +17,9 @@ public class Category
     [Display(Name = "顏色")]
     public string Color { get; set; } = "#1976D2";
 
+    [Display(Name = "預算金額")]
+    [Range(0, int.MaxValue, ErrorMessage = "預算金額不可為負數")]
+    public int Budget { get; set; } = 0;
+
     public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
 }

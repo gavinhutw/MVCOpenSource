@@ -21,7 +21,7 @@
                             <div class="col-6">
                                 <label asp-for="Type" class="form-label fw-semibold">類型</label>
                                 <select asp-for="Type" id="typeSelect" class="form-select"
-                                        onchange="filterCategories(this.value)">
+                                        onchange="onTypeChanged(this.value)">
                                     <option value="Expense">支出</option>
                                     <option value="Income">收入</option>
                                 </select>
@@ -49,7 +49,8 @@
                             </div>
                             <div class="col-12">
                                 <label asp-for="CategoryId" class="form-label fw-semibold">分類</label>
-                                <select asp-for="CategoryId" id="categorySelect" class="form-select">
+                                <select asp-for="CategoryId" id="categorySelect" class="form-select"
+                                        onchange="onCategoryChanged(this.value)">
                                     @foreach (var c in Model.Categories)
                                     {
                                         <option value="@c.Id" data-type="@c.Type">@c.Name</option>
@@ -60,6 +61,43 @@
                             <div class="col-12">
                                 <label asp-for="Description" class="form-label fw-semibold">說明（選填）</label>
                                 <input asp-for="Description" class="form-control" placeholder="輸入交易說明" />
+                            </div>
+
+                            <!-- ── 預支項目 Grid ──────────────────────────── -->
+                            <div class="col-12" id="advanceSection" style="display:none;">
+                                <label class="form-label fw-semibold text-primary">
+                                    <i class="bi bi-calendar-check me-1"></i>預支項目
+                                </label>
+                                <div class="border rounded" style="background:#f8fafc;">
+                                    <table class="table table-sm table-hover mb-0 align-middle">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th style="width:40px;" class="ps-2 text-center">選取</th>
+                                                <th>預支項目名稱</th>
+                                                <th style="width:120px;" class="text-end pe-3">預支金額</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="advanceBody">
+                                            <tr id="advanceEmpty">
+                                                <td colspan="3" class="text-center text-muted py-3 small">
+                                                    此分類無預支項目
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- 預算資訊 -->
+                                <div id="budgetInfo" class="mt-2" style="display:none;">
+                                    <div class="card border-0 bg-light rounded p-3">
+                                        <div class="row g-2 text-center mb-2" id="budgetDetails"></div>
+                                        <hr class="my-2" />
+                                        <div class="text-center">
+                                            <div class="small text-muted mb-1">尚餘預算</div>
+                                            <div id="remainingDisplay" class="fw-bold"></div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -82,19 +120,158 @@ const allCategories = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
     Model.Categories.Select(c => new { id = c.Id, name = c.Name, type = c.Type.ToString() })
 ));
 
+// 當前載入的分類資訊（API 回傳）
+let currentCatData = null;
+
+// ── 分類篩選 ──────────────────────────────────────────────
 function filterCategories(type) {
     const sel = document.getElementById('categorySelect');
-    const currentVal = sel.value;
     sel.innerHTML = '';
-    allCategories
-        .filter(c => c.type === type)
-        .forEach(c => {
-            const opt = new Option(c.name, c.id);
-            sel.add(opt);
-        });
+    const filtered = allCategories.filter(c => c.type === type);
+    filtered.forEach(c => sel.add(new Option(c.name, c.id)));
+    return filtered.length > 0 ? filtered[0].id : null;
 }
 
-// Init on load
-filterCategories(document.getElementById('typeSelect').value);
+function onTypeChanged(type) {
+    const firstId = filterCategories(type);
+    if (firstId) onCategoryChanged(firstId);
+    else document.getElementById('advanceSection').style.display = 'none';
+}
+
+// ── 分類切換：呼叫 API ────────────────────────────────────
+async function onCategoryChanged(categoryId) {
+    const typeVal = document.getElementById('typeSelect').value;
+    if (typeVal !== 'Expense' || !categoryId) {
+        document.getElementById('advanceSection').style.display = 'none';
+        currentCatData = null;
+        return;
+    }
+
+    document.getElementById('advanceSection').style.display = '';
+
+    try {
+        const res  = await fetch(`/Transactions/GetCategoryInfo?categoryId=${categoryId}`);
+        const data = await res.json();
+        if (!data.ok) return;
+
+        currentCatData = data;
+        renderAdvanceGrid(data);
+        recalcAndRender();          // 初次以全未勾選計算
+    } catch (e) {
+        console.error('取得分類資訊失敗', e);
+    }
+}
+
+// ── 渲染預支項目 Grid ─────────────────────────────────────
+function renderAdvanceGrid(data) {
+    const tbody = document.getElementById('advanceBody');
+    const empty = document.getElementById('advanceEmpty');
+
+    tbody.querySelectorAll('tr.adv-row').forEach(r => r.remove());
+
+    if (!data.advances || data.advances.length === 0) {
+        empty.style.display = '';
+    } else {
+        empty.style.display = 'none';
+        data.advances.forEach(a => {
+            const tr = document.createElement('tr');
+            tr.className = 'adv-row';
+            tr.innerHTML = `
+                <td class="ps-2 text-center">
+                    <input type="checkbox" class="form-check-input adv-check"
+                           name="advanceIds" value="${a.serialNo}"
+                           data-amount="${a.amount}"
+                           data-monthcount="${a.monthCount}"
+                           onchange="recalcAndRender()" />
+                </td>
+                <td class="small">${a.name}
+                    <span class="badge bg-secondary ms-1" style="font-size:0.65em;">${a.monthCount}個月</span>
+                </td>
+                <td class="text-end pe-3 small fw-semibold">NT$ ${a.amount.toLocaleString()}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+}
+
+// ── 核心重算（依勾選狀態） ────────────────────────────────
+function recalcAndRender() {
+    const data = currentCatData;
+    if (!data || data.budget <= 0) {
+        document.getElementById('budgetInfo').style.display = 'none';
+        return;
+    }
+
+    // 收集所有預支項目的勾選狀態
+    const checks = document.querySelectorAll('.adv-check');
+    let adjustedBudget = data.budget;
+
+    checks.forEach(cb => {
+        const amount     = parseInt(cb.dataset.amount)     || 0;
+        const monthCount = parseInt(cb.dataset.monthcount) || 1;
+        if (cb.checked) {
+            // 已勾選：加回 Amount × (MonthCount - 1)，不扣除
+            adjustedBudget += amount * (monthCount - 1);
+        } else {
+            // 未勾選：扣除 Amount
+            adjustedBudget -= amount;
+        }
+    });
+
+    const ratio          = data.today / data.daysInMonth;
+    const availableBudget = Math.round(adjustedBudget * ratio);
+    const remaining      = availableBudget - Number(data.monthlyExpense);
+
+    renderBudgetInfo(adjustedBudget, ratio, availableBudget, Number(data.monthlyExpense), remaining, data);
+}
+
+// ── 渲染預算資訊區塊 ─────────────────────────────────────
+function renderBudgetInfo(adjustedBudget, ratio, availableBudget, monthlyExpense, remaining, data) {
+    const budgetInfo = document.getElementById('budgetInfo');
+    budgetInfo.style.display = '';
+
+    const ratioStr = `${data.today}/${data.daysInMonth}`;
+
+    document.getElementById('budgetDetails').innerHTML = `
+        <div class="col-4">
+            <div class="small text-muted">預算金額</div>
+            <div class="fw-semibold">NT$ ${data.budget.toLocaleString()}</div>
+        </div>
+        <div class="col-4">
+            <div class="small text-muted">調整後預算</div>
+            <div class="fw-semibold text-info">NT$ ${adjustedBudget.toLocaleString()}</div>
+        </div>
+        <div class="col-4">
+            <div class="small text-muted">日期比率</div>
+            <div class="fw-semibold">${ratioStr} ≈ ${(ratio * 100).toFixed(1)}%</div>
+        </div>
+        <div class="col-6">
+            <div class="small text-muted">可用預算</div>
+            <div class="fw-semibold text-primary">NT$ ${availableBudget.toLocaleString()}</div>
+        </div>
+        <div class="col-6">
+            <div class="small text-muted">本月已支出</div>
+            <div class="fw-semibold text-danger">－NT$ ${monthlyExpense.toLocaleString()}</div>
+        </div>
+    `;
+
+    const remEl = document.getElementById('remainingDisplay');
+    if (remaining < 0) {
+        remEl.style.color    = '#dc3545';
+        remEl.style.fontSize = '1.5rem';
+        remEl.textContent    = `－NT$ ${Math.abs(remaining).toLocaleString()}`;
+    } else {
+        remEl.style.color    = '#0d6efd';
+        remEl.style.fontSize = '1.5rem';
+        remEl.textContent    = `NT$ ${remaining.toLocaleString()}`;
+    }
+}
+
+// ── 初始化 ────────────────────────────────────────────────
+(function init() {
+    filterCategories(document.getElementById('typeSelect').value);
+    const catId = document.getElementById('categorySelect').value;
+    if (catId) onCategoryChanged(catId);
+})();
 </script>
 }

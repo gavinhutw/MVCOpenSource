@@ -26,6 +26,16 @@
                                 <option value="Income">收入</option>
                             </select>
                         </div>
+                        <div class="mb-3">
+                            <label asp-for="Budget" class="form-label fw-semibold"></label>
+                            <div class="input-group">
+                                <span class="input-group-text">NT$</span>
+                                <input asp-for="Budget" type="number" class="form-control"
+                                       min="0" step="1" placeholder="0 表示不設預算" />
+                            </div>
+                            <span asp-validation-for="Budget" class="text-danger small"></span>
+                            <div class="form-text text-muted">填入 0 表示不設預算上限</div>
+                        </div>
                         <div class="mb-4">
                             <label asp-for="Color" class="form-label fw-semibold"></label>
                             <div class="d-flex align-items-center gap-3">

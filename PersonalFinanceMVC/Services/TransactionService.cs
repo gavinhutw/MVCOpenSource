@@ -94,4 +94,12 @@ public class TransactionService
         await _db.Transactions
             .Where(t => t.Type == TransactionType.Expense && t.Date.Year == year && t.Date.Month == month)
             .SumAsync(t => (decimal?)t.Amount) ?? 0;
+
+    public async Task<decimal> GetMonthlyExpenseByCategoryAsync(int year, int month, int categoryId) =>
+        await _db.Transactions
+            .Where(t => t.Type == TransactionType.Expense
+                     && t.Date.Year == year
+                     && t.Date.Month == month
+                     && t.CategoryId == categoryId)
+            .SumAsync(t => (decimal?)t.Amount) ?? 0;
 }

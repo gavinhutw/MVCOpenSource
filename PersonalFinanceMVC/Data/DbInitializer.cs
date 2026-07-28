@@ -38,6 +38,40 @@ public static class DbInitializer
             END
         ");
 
+        // ── AdvancePayment ────────────────────────────────────────
+        db.Database.ExecuteSqlRaw(@"
+            IF NOT EXISTS (
+                SELECT 1 FROM sys.objects
+                WHERE object_id = OBJECT_ID(N'[dbo].[AdvancePayments]') AND type = N'U'
+            )
+            BEGIN
+                CREATE TABLE [dbo].[AdvancePayments] (
+                    [SerialNo]      INT           IDENTITY(1,1) NOT NULL,
+                    [Categories_Id] INT           NOT NULL,
+                    [Name]          NVARCHAR(100) NOT NULL,
+                    [MonthCount]    INT           NOT NULL DEFAULT 1,
+                    [Amount]        INT           NOT NULL DEFAULT 0,
+                    CONSTRAINT [PK_AdvancePayments] PRIMARY KEY ([SerialNo]),
+                    CONSTRAINT [FK_AdvancePayment_Categories]
+                        FOREIGN KEY ([Categories_Id])
+                        REFERENCES [dbo].[Categories] ([Id])
+                        ON DELETE NO ACTION
+                );
+            END
+        ");
+
+        // ── Categories.Budget 欄位（對已存在的資料表補欄位）────────
+        db.Database.ExecuteSqlRaw(@"
+            IF NOT EXISTS (
+                SELECT 1 FROM sys.columns
+                WHERE object_id = OBJECT_ID(N'[dbo].[Categories]') AND name = N'Budget'
+            )
+            BEGIN
+                ALTER TABLE [dbo].[Categories]
+                    ADD [Budget] INT NOT NULL DEFAULT 0;
+            END
+        ");
+
         // ── LoginLogs ─────────────────────────────────────────────
         db.Database.ExecuteSqlRaw(@"
             IF NOT EXISTS (
