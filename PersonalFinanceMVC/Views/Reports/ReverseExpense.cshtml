@@ -6,7 +6,7 @@
         <i class="bi bi-funnel-fill me-2 text-primary"></i>依支出分類反向查詢
     </h5>
     <p class="text-muted small mb-3">
-        選擇分類後，輸入要<strong>排除</strong>的關鍵字（說明欄位中<strong>不含</strong>任何關鍵字的記錄才會顯示）。
+        選擇分類與月份範圍後，輸入要<strong>排除</strong>的關鍵字（說明欄位中<strong>不含</strong>任何關鍵字的記錄才會顯示）。
         關鍵字欄位可留空不填。
     </p>
 
@@ -31,6 +31,20 @@
                                 </option>
                             }
                         </select>
+                    </div>
+
+                    <!-- 起始月份 -->
+                    <div class="col-sm-auto">
+                        <label class="form-label small text-muted mb-1">起始月份</label>
+                        <input type="month" name="startMonth" class="form-control form-control-sm"
+                               value="@Model.StartMonth" style="width:150px;" />
+                    </div>
+
+                    <!-- 結束月份 -->
+                    <div class="col-sm-auto">
+                        <label class="form-label small text-muted mb-1">結束月份</label>
+                        <input type="month" name="endMonth" class="form-control form-control-sm"
+                               value="@Model.EndMonth" style="width:150px;" />
                     </div>
 
                     <!-- 五個關鍵字欄位 -->
@@ -122,6 +136,7 @@
                 {
                     <small class="mt-1">
                         分類：<span class="badge rounded-pill" style="background:@selectedCat.Color;">@selectedCat.Name</span>
+                        ，期間：@Model.StartMonth ～ @Model.EndMonth
                         @if (Model.ActiveKeywords.Any())
                         {
                             <span class="ms-1">，已排除含「@string.Join("、", Model.ActiveKeywords)」的記錄</span>

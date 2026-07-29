@@ -42,11 +42,18 @@ public class ReportService
     }
 
     public async Task<List<LargeExpenseMonthGroup>> GetReverseExpensesAsync(
-        int categoryId, List<string> excludeKeywords)
+        int categoryId, List<string> excludeKeywords,
+        int startYear, int startMonth, int endYear, int endMonth)
     {
-        // 先依分類+支出取出全部資料，再於記憶體做反向關鍵字過濾
+        var startDate = new DateTime(startYear, startMonth, 1);
+        var endDate   = new DateTime(endYear,   endMonth,   1).AddMonths(1).AddDays(-1);
+
+        // 先依分類+支出+日期範圍取出資料，再於記憶體做反向關鍵字過濾
         var rows = await _db.Transactions
-            .Where(t => t.Type == TransactionType.Expense && t.CategoryId == categoryId)
+            .Where(t => t.Type       == TransactionType.Expense
+                     && t.CategoryId == categoryId
+                     && t.Date       >= startDate
+                     && t.Date       <= endDate)
             .Include(t => t.Category)
             .Include(t => t.Account)
             .OrderBy(t => t.Date)

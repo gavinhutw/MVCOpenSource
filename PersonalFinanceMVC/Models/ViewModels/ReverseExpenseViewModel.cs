@@ -6,6 +6,8 @@ public class ReverseExpenseViewModel
 {
     // ── 查詢條件 ──────────────────────────────────────────────
     public int    CategoryId { get; set; }
+    public string StartMonth { get; set; } = DateTime.Now.AddMonths(-2).ToString("yyyy-MM");
+    public string EndMonth   { get; set; } = DateTime.Now.ToString("yyyy-MM");
     public string Keyword1   { get; set; } = "";
     public string Keyword2   { get; set; } = "";
     public string Keyword3   { get; set; } = "";

@@ -89,10 +89,27 @@ public class ReportsController : Controller
 
     [HttpPost]
     public async Task<IActionResult> ReverseExpense(
-        int categoryId,
+        int categoryId, string? startMonth, string? endMonth,
         string? keyword1, string? keyword2, string? keyword3,
         string? keyword4, string? keyword5)
     {
+        var now = DateTime.Now;
+
+        static (int y, int m) Parse(string? s, DateTime fallback)
+        {
+            if (DateTime.TryParseExact((s ?? "") + "-01", "yyyy-MM-dd",
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.None, out var dt))
+                return (dt.Year, dt.Month);
+            return (fallback.Year, fallback.Month);
+        }
+
+        var (sy, sm) = Parse(startMonth, now.AddMonths(-2));
+        var (ey, em) = Parse(endMonth,   now);
+
+        if (new DateTime(sy, sm, 1) > new DateTime(ey, em, 1))
+            (sy, sm, ey, em) = (ey, em, sy, sm);
+
         var categories = await _categoryService.GetByTypeAsync(TransactionType.Expense);
 
         var keywords = new[] { keyword1, keyword2, keyword3, keyword4, keyword5 }
@@ -103,6 +120,8 @@ public class ReportsController : Controller
         var model = new ReverseExpenseViewModel
         {
             CategoryId  = categoryId,
+            StartMonth  = $"{sy:D4}-{sm:D2}",
+            EndMonth    = $"{ey:D4}-{em:D2}",
             Keyword1    = keyword1 ?? "",
             Keyword2    = keyword2 ?? "",
             Keyword3    = keyword3 ?? "",
@@ -111,7 +130,7 @@ public class ReportsController : Controller
             HasSearched = true,
             Categories  = categories,
             Groups      = categoryId > 0
-                ? await _reportService.GetReverseExpensesAsync(categoryId, keywords)
+                ? await _reportService.GetReverseExpensesAsync(categoryId, keywords, sy, sm, ey, em)
                 : new()
         };
         return View(model);
